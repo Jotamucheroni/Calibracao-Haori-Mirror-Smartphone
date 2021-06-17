@@ -1,3 +1,3 @@
-# Calibração Haori Mirror - Desktop
+# Calibração Haori Mirror - Smartphone
 
-Módulo desktop de software escrito em Java para calibração do HMD Haori Mirror AR Headset.
+Módulo para smartphone de software escrito em Java para calibração do HMD Haori Mirror AR Headset.
