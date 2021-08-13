@@ -58,10 +58,10 @@ public class ConfigOpenGL {
         final int[] bufferConfig =  new int[10];
         
         GLES32.glGetFramebufferAttachmentParameteriv(
-                tipo, buffer, GLES32. GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, bufferConfig, 0
+                tipo, buffer, GLES32.GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, bufferConfig, 0
         );
         GLES32.glGetFramebufferAttachmentParameteriv(
-                tipo, buffer, GLES32. GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, bufferConfig, 1
+                tipo, buffer, GLES32.GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, bufferConfig, 1
         );
         GLES32.glGetFramebufferAttachmentParameteriv(
                 tipo, buffer, GLES32.GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE, bufferConfig, 2
@@ -85,7 +85,7 @@ public class ConfigOpenGL {
                 tipo, buffer, GLES32.GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE, bufferConfig, 8
         );
         GLES32.glGetFramebufferAttachmentParameteriv(
-                tipo, buffer, GLES32. GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING, bufferConfig, 9
+                tipo, buffer, GLES32.GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING, bufferConfig, 9
         );
         
         String tipoAlvo;

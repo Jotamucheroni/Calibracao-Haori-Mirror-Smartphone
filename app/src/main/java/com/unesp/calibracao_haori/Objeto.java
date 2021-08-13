@@ -64,7 +64,7 @@ public class Objeto {
         fb.position( 0 );
         GLES32.glBufferData( GLES32.GL_ARRAY_BUFFER, tamVertices, fb, GLES32.GL_STATIC_DRAW );
         
-        program = RenderizadorOpenGL.gerarPrograma( numCompCor, numCompTex, texPb );
+        program = ProgramaOpenGL.gerarPrograma( numCompCor, numCompTex, texPb );
         
         pontMatrizEscala = GLES32.glGetUniformLocation( program, "escala" );
         pontMatrizRotX = GLES32.glGetUniformLocation( program, "rotX" );
