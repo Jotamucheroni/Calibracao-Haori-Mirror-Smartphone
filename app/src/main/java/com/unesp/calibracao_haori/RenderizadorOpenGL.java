@@ -3,6 +3,8 @@ package com.unesp.calibracao_haori;
 /*import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;*/
 import android.Manifest;
+import android.content.res.Resources;
+import android.graphics.BitmapFactory;
 import android.opengl.GLES32;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
@@ -167,6 +169,7 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer, ImageAnalysis
         }
         bt.abrirServidor();
         
+        // Framebuffer
         GLES32.glGenFramebuffers( fbo.length, fbo, 0 );
         GLES32.glGenRenderbuffers( rbo.length, rbo, 0 );
         GLES32.glBindFramebuffer( GLES32.GL_DRAW_FRAMEBUFFER, fbo[0] );
@@ -176,36 +179,29 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer, ImageAnalysis
         
         GLES32.glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
         
+        // Texturas
         GLES32.glGenTextures( texturas.length, texturas, 0 );
+        for( int textura : texturas ) {
+            GLES32.glBindTexture( GLES32.GL_TEXTURE_2D, textura );
+            setTexParams();
+        }
         
         GLES32.glBindTexture( GLES32.GL_TEXTURE_2D, texturas[0] );
-        setTexParams();
-        
         GLES32.glTexImage2D(
             GLES32.GL_TEXTURE_2D, 0, GLES32.GL_R8,
             larImgCam, altImgCam, 0,
             GLES32.GL_RED, GLES32.GL_UNSIGNED_BYTE, null
         );
-        
-        /*int[] imageTex = new int[]{ R.drawable.cachorrinho, R.drawable.gatinho };
-        for ( int i = 1; i < texturas.length; i++ ) {
-            GLES32.glBindTexture( GLES32.GL_TEXTURE_2D, texturas[i] );
-            setTexParams();
-            
-            Bitmap bitmap = BitmapFactory.decodeResource(
-                activity.getResources(), imageTex[i - 1]
-            );
-            ByteBuffer bb = ByteBuffer.allocateDirect( bitmap.getByteCount() );
-            bb.order( ByteOrder.nativeOrder() );
-            bitmap.copyPixelsToBuffer( bb );
-            bb.position(0 );
-            
-            GLES32.glTexImage2D(
-                GLES32.GL_TEXTURE_2D, 0, GLES32.GL_RGBA8,
-                bitmap.getWidth(), bitmap.getHeight(), 0,
-                GLES32.GL_RGBA, GLES32.GL_UNSIGNED_BYTE, bb
-            );
-        }*/
+
+        Resources resources = activity.getResources();
+        new ImagemOpenGL(
+            BitmapFactory.decodeResource( resources, R.drawable.cachorrinho ),
+            texturas[1]
+        ).carregar();
+        new ImagemOpenGL(
+            BitmapFactory.decodeResource( resources, R.drawable.gatinho ),
+            texturas[2]
+        ).carregar();
         
         /*float[] copiaTri = refTriangulo.clone();
         
@@ -243,7 +239,7 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer, ImageAnalysis
         
         objetos[0] = new Objeto(
             GLES32.GL_TRIANGLES, 2, 2,
-            refQuad, refElementos, texturas[0], true
+            refQuad, refElementos, texturas[1], true
         );
     }
     
