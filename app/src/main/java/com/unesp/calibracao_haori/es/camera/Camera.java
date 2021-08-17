@@ -2,7 +2,7 @@ package com.unesp.calibracao_haori.es.camera;
 
 import java.nio.ByteBuffer;
 
-public abstract class Camera {
+public abstract class Camera implements AutoCloseable {
     private int largImg, altImg;
     private int numCompCor;
     protected ByteBuffer buffer, visBuffer;
@@ -69,5 +69,10 @@ public abstract class Camera {
     public void reiniciar() {
         desligar();
         ligar();
+    }
+    
+    @Override
+    public void close() {
+        desligar();
     }
 }

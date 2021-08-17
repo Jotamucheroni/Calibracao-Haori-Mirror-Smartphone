@@ -128,6 +128,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         
-        glView.liberarRecursos();
+        glView.close();
     }
 }

@@ -3,7 +3,7 @@ package com.unesp.calibracao_haori;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 
-public class SuperficieOpenGL extends GLSurfaceView {
+public class SuperficieOpenGL extends GLSurfaceView implements AutoCloseable {
     private RenderizadorOpenGL renderizador = null;
     
     public SuperficieOpenGL( Context context ) {
@@ -18,10 +18,11 @@ public class SuperficieOpenGL extends GLSurfaceView {
         setRenderer( renderizador );
     }
     
-    public void liberarRecursos() {
+    @Override
+    public void close() {
         if ( renderizador == null )
             return;
         
-        renderizador.liberarRecursos();
+        renderizador.close();
     }
 }

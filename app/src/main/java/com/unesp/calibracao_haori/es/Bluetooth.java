@@ -20,7 +20,7 @@ import com.unesp.calibracao_haori.MainActivity;
 /*import android.content.IntentFilter;
 import android.util.Log;*/
 
-public class Bluetooth {
+public class Bluetooth implements AutoCloseable {
     private final MainActivity activity;
     private final BluetoothAdapter bluetoothAdapter;
 /*    private final TreeSet<BluetoothDevice> remoteDevices;
@@ -186,5 +186,11 @@ public class Bluetooth {
         } catch ( IOException e ) {
             e.printStackTrace();
         }
+    }
+    
+    @Override
+    public void close() {
+//        encerrarPesquisa();
+        fecharServidor();
     }
 }

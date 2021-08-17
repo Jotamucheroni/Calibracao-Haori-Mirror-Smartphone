@@ -1,8 +1,6 @@
 package com.unesp.calibracao_haori;
 
 import android.Manifest;
-import android.content.res.Resources;
-import android.graphics.BitmapFactory;
 import android.opengl.GLES32;
 import android.opengl.GLSurfaceView;
 
@@ -15,7 +13,7 @@ import com.unesp.calibracao_haori.es.camera.CameraLocal;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-public class RenderizadorOpenGL implements GLSurfaceView.Renderer {
+public class RenderizadorOpenGL implements GLSurfaceView.Renderer, AutoCloseable {
     private final MainActivity activity;
     
     public RenderizadorOpenGL( MainActivity activity ) {
@@ -42,7 +40,7 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer {
     private final int[] refElementos = { 0, 1, 2, 2, 3, 0 };
     
     private Camera camera;
-    private Bluetooth bt;
+    private Bluetooth bluetooth;
     
     private final int numLinhas = 1, numColunas = 2, numLinhasM1 = numLinhas - 1;
     private FrameBuffer frameBuffer;
@@ -79,11 +77,11 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer {
         // Bluetooth
         activity.requisitarPermissao( Manifest.permission.BLUETOOTH );
         try {
-            bt = new Bluetooth( activity, camera.getTamImg(), camera.getImagem() );
+            bluetooth = new Bluetooth( activity, camera.getTamImg(), camera.getImagem() );
         } catch ( Exception e ) {
             e.printStackTrace();
         }
-        bt.abrirServidor();
+        bluetooth.abrirServidor();
         
         // Framebuffer
         frameBuffer = new FrameBuffer(
@@ -150,7 +148,7 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer {
         
         for ( int i = 3; i < 5; i ++ )
             objetos[i].setEscala( 0.25f, 0.25f, 0.0f );*/
-
+        
         GLES32.glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
         objetos[0] = new Objeto(
             GLES32.GL_TRIANGLES, 2, 2,
@@ -198,13 +196,12 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer {
         }
     }
     
-    public void liberarRecursos() {
-        ProgramaOpenGL.liberarRecursos();
-        
+    @Override
+    public void close() {
+        ProgramaOpenGL.close();
         GLES32.glDeleteTextures( texturas.length, texturas, 0 );
         frameBuffer.close();
-        
-        bt.fecharServidor();
-        camera.desligar();
+        bluetooth.close();
+        camera.close();
     }
 }
