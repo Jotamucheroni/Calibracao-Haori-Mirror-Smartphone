@@ -17,7 +17,7 @@ public class ProgramaOpenGL {
         if ( compilado[0] == 0 ) {
             // Imprime o código onde está localizado o erro
             System.out.println( "Um programa não pôde ser compilado:\n" + "Código fonte:" );
-
+            
             int i = 1;
             for( String linha: shaderCode.split( "\n" ) ) {
                 System.out.println( i + "\t" + linha );
@@ -133,13 +133,14 @@ public class ProgramaOpenGL {
         ;
     
     private static final String corFragRef =
-            "saida[0] = saida[4] = corFrag;\n"
+            "saida[1] = saida[0] = corFrag;\n"
+        /*    "saida[0] = saida[4] = corFrag;\n"
         +   "saida[1] = saida[5] = getInv( saida[0] );\n"
         +   "saida[2] = saida[6] = getCinzaMed( saida[0] );\n"
-        +   "saida[3] = saida[7] = getCinzaPond( saida[0] );\n"
+        +   "saida[3] = saida[7] = getCinzaPond( saida[0] );\n"*/
         ;
     
-    private static final int numSaidas = 8;
+    private static final int numSaidas = 2;
     
     private static final int[][][] programas = new int[][][] {
         { { 0, 0 }, { 0, 0 } }, { { 0, 0 }, { 0, 0 } }
@@ -227,12 +228,12 @@ public class ProgramaOpenGL {
 
                     +   "saida[0] = janela[1][1];\n"
                     +   "saida[1] = sobel;\n"
-                    +   "saida[2] = ( sobel.r > 0.5 ) ? sobel : vec4( 0.0 );\n"
+                    /*+   "saida[2] = ( sobel.r > 0.5 ) ? sobel : vec4( 0.0 );\n"
                     +   "saida[3] = ( sobel.r > 0.7 ) ? sobel : vec4( 0.0 );\n"
                     +   "saida[4] = ( sobel.r > 0.9 ) ? sobel : vec4( 0.0 );\n"
                     +   "saida[5] = ( sobel.r > 1.1 ) ? sobel : vec4( 0.0 );\n"
                     +   "saida[6] = ( sobel.r > 1.3 ) ? sobel : vec4( 0.0 );\n"
-                    +   "saida[7] = ( sobel.r > 1.5 ) ? sobel : vec4( 0.0 );\n"
+                    +   "saida[7] = ( sobel.r > 1.5 ) ? sobel : vec4( 0.0 );\n"*/
                 );
             }
         }

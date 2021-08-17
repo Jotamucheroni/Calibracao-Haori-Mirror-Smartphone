@@ -44,11 +44,8 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer {
     private Camera camera;
     private Bluetooth bt;
     
-    final int numLinhas = 2, numColunas = 4, numLinhasM1 = numLinhas - 1;
-    
-    final int[] fbo = new int[1];
-    final int[] rbo = new int[numLinhas * numColunas];
-    final int[] drawBuffers = new int[rbo.length];
+    private final int numLinhas = 1, numColunas = 2, numLinhasM1 = numLinhas - 1;
+    private FrameBuffer frameBuffer;
     
     final int[] texturas = new int[3];
     
@@ -89,14 +86,12 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer {
         bt.abrirServidor();
         
         // Framebuffer
-        GLES32.glGenFramebuffers( fbo.length, fbo, 0 );
-        GLES32.glGenRenderbuffers( rbo.length, rbo, 0 );
-        GLES32.glBindFramebuffer( GLES32.GL_DRAW_FRAMEBUFFER, fbo[0] );
-        for ( int i = 0; i < drawBuffers.length; i++ )
-            drawBuffers[i] = GLES32.GL_COLOR_ATTACHMENT0 + i;
-        GLES32.glDrawBuffers( drawBuffers.length, drawBuffers, 0  );
-        
-        GLES32.glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
+        frameBuffer = new FrameBuffer(
+            numColunas * numLinhas, 640,480
+        );
+        GLES32.glDrawBuffers(
+            2, new int[]{ GLES32.GL_COLOR_ATTACHMENT0, GLES32.GL_COLOR_ATTACHMENT1 }, 0
+        );
         
         // Texturas
         GLES32.glGenTextures( texturas.length, texturas, 0 );
@@ -155,7 +150,8 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer {
         
         for ( int i = 3; i < 5; i ++ )
             objetos[i].setEscala( 0.25f, 0.25f, 0.0f );*/
-        
+
+        GLES32.glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
         objetos[0] = new Objeto(
             GLES32.GL_TRIANGLES, 2, 2,
             refQuad, refElementos, texturas[0], true
@@ -166,29 +162,10 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer {
     
     @Override
     public void onSurfaceChanged( GL10 unused, int width, int height ) {
-        int newWidth = width / numColunas;
-        int newHeight = height / numLinhas;
+        viewWidth = width / numColunas;
+        viewHeight = height / numLinhas;
         
-        if ( viewWidth != newWidth || viewHeight != newHeight ) {
-            viewWidth = newWidth;
-            viewHeight = newHeight;
-            
-            GLES32.glBindFramebuffer( GLES32.GL_DRAW_FRAMEBUFFER, fbo[0] );
-            
-            for ( int i = 0; i < rbo.length; i++ ) {
-                GLES32.glBindRenderbuffer( GLES32.GL_RENDERBUFFER, rbo[i] );
-                GLES32.glRenderbufferStorage(
-                    GLES32.GL_RENDERBUFFER, GLES32.GL_RGB8,
-                    viewWidth, viewHeight
-                );
-                GLES32.glFramebufferRenderbuffer(
-                    GLES32.GL_DRAW_FRAMEBUFFER, GLES32.GL_COLOR_ATTACHMENT0 + i,
-                    GLES32.GL_RENDERBUFFER, rbo[i]
-                );
-            }
-            
-            GLES32.glViewport( 0, 0, viewWidth, viewHeight );
-        }
+        GLES32.glViewport( 0, 0, frameBuffer.getLargura(), frameBuffer.getAltura() );
     }
     
     @Override
@@ -200,23 +177,23 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer {
             GLES32.GL_UNSIGNED_BYTE, camera.getImagem()
         );
         
-        GLES32.glBindFramebuffer( GLES32.GL_FRAMEBUFFER, fbo[0] );
-        GLES32.glClear( GLES32.GL_COLOR_BUFFER_BIT );
+        GLES32.glBindFramebuffer( GLES32.GL_FRAMEBUFFER, frameBuffer.getId() );
         
+        GLES32.glClear( GLES32.GL_COLOR_BUFFER_BIT );
         for ( Objeto obj: objetos )
             obj.draw();
         
         GLES32.glBindFramebuffer( GLES32.GL_DRAW_FRAMEBUFFER, 0 );
-        for ( int i = 0; i < drawBuffers.length; i++ ) {
+        for ( int i = 0; i < frameBuffer.getNumRenderBuffer(); i++ ) {
             int coluna = i % numColunas;
             int linha = numLinhasM1 - ( i / numColunas );
             
             GLES32.glReadBuffer( GLES32.GL_COLOR_ATTACHMENT0 + i );
             GLES32.glBlitFramebuffer(
-                0,0, viewWidth, viewHeight,
+                0,0, frameBuffer.getLargura(), frameBuffer.getAltura(),
                 coluna * viewWidth, linha * viewHeight,
                 ( coluna + 1 ) * viewWidth, ( linha  + 1 ) * viewHeight,
-                GLES32.GL_COLOR_BUFFER_BIT, GLES32.GL_NEAREST
+                GLES32.GL_COLOR_BUFFER_BIT, GLES32.GL_LINEAR
             );
         }
     }
@@ -225,9 +202,9 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer {
         ProgramaOpenGL.liberarRecursos();
         
         GLES32.glDeleteTextures( texturas.length, texturas, 0 );
-        GLES32.glDeleteRenderbuffers( rbo.length, rbo, 0 );
-        GLES32.glDeleteFramebuffers( fbo.length, fbo, 0 );
+        frameBuffer.close();
         
+        bt.fecharServidor();
         camera.desligar();
     }
 }
