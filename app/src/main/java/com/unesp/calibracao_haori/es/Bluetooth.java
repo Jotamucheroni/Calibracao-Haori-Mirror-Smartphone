@@ -1,4 +1,4 @@
-package com.unesp.calibracao_haori;
+package com.unesp.calibracao_haori.es;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -15,6 +15,8 @@ import android.content.Context;*/
 import android.content.Intent;
 
 import androidx.annotation.NonNull;
+
+import com.unesp.calibracao_haori.MainActivity;
 /*import android.content.IntentFilter;
 import android.util.Log;*/
 
@@ -28,8 +30,8 @@ public class Bluetooth {
     private final int tamBufferSaida;
     private final ByteBuffer bufferSaida;
     
-    Bluetooth(
-        MainActivity activity, int tamBufferSaida, ByteBuffer bufferSaida
+    public Bluetooth(
+            MainActivity activity, int tamBufferSaida, ByteBuffer bufferSaida
     ) throws Exception {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if ( bluetoothAdapter == null )
@@ -72,7 +74,7 @@ public class Bluetooth {
         this.bufferSaida = bufferSaida.asReadOnlyBuffer();
     }
     
-    Bluetooth( MainActivity activity ) throws Exception {
+    public Bluetooth( MainActivity activity ) throws Exception {
         this( activity, 1, ByteBuffer.allocateDirect( 1 ) );
     }
     

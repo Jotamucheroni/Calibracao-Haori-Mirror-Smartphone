@@ -1,37 +1,22 @@
 package com.unesp.calibracao_haori;
 
-/*import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;*/
 import android.Manifest;
 import android.content.res.Resources;
 import android.graphics.BitmapFactory;
 import android.opengl.GLES32;
 import android.opengl.GLSurfaceView;
-import android.util.Log;
-import android.util.Size;
 
-import androidx.annotation.NonNull;
 import androidx.camera.core.CameraSelector;
-import androidx.camera.core.ImageAnalysis;
-import androidx.camera.core.ImageProxy;
-import androidx.camera.lifecycle.ProcessCameraProvider;
-import androidx.core.content.ContextCompat;
 
-import com.google.common.util.concurrent.ListenableFuture;
-
-import java.nio.ByteBuffer;
-//import java.nio.ByteOrder;
-import java.util.Arrays;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import com.unesp.calibracao_haori.es.Bluetooth;
+import com.unesp.calibracao_haori.es.camera.Camera;
+import com.unesp.calibracao_haori.es.camera.CameraLocal;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-public class RenderizadorOpenGL implements GLSurfaceView.Renderer, ImageAnalysis.Analyzer {
+public class RenderizadorOpenGL implements GLSurfaceView.Renderer {
     private final MainActivity activity;
-    private final ExecutorService cameraExecutor = Executors.newSingleThreadExecutor();
     
     public RenderizadorOpenGL( MainActivity activity ) {
         super();
@@ -56,60 +41,8 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer, ImageAnalysis
     
     private final int[] refElementos = { 0, 1, 2, 2, 3, 0 };
     
-    private final int larImgCam = 320, altImgCam = 240, tamImagem = larImgCam * altImgCam;
-    private final ByteBuffer imagemCamera = ByteBuffer.allocateDirect( tamImagem );
-    private final ByteBuffer imagemCameraVis = imagemCamera.asReadOnlyBuffer();
-    
-    Bluetooth bt;
-    
-    //    private boolean inicilizado = false;
-    
-    @Override
-    public void analyze( @NonNull ImageProxy imagem ) {
-//        final String TAG = "Câmera: Imagem";
-        
-        final ByteBuffer bb = imagem.getPlanes()[0].getBuffer();
-        
-        bb.rewind();
-        imagemCamera.rewind();
-        imagemCamera.put( bb );
-        
-        /*if ( ! inicilizado ) {
-            inicilizado = true;
-            
-            Log.i( TAG, "Formato: " + imagem.getFormat() );
-            Log.i( TAG, "Largura: " + imagem.getWidth() );
-            Log.i( TAG, "Altura: " + imagem.getHeight() );
-            
-            final Rect ret = imagem.getCropRect();
-            
-            Log.i( TAG, "Largura do corte: " + ret.width() );
-            Log.i( TAG, "Altura do corte: " + ret.height() );
-            
-            Log.i( TAG, "Rotação: " + imagem.getImageInfo().getRotationDegrees() );
-            
-            final ImageProxy.PlaneProxy lum = imagem.getPlanes()[0];
-            
-            Log.i( TAG, "Tamanho dos píxeis: " + lum.getPixelStride() );
-            Log.i( TAG, "Tamanho das linhas: " + lum.getRowStride() );
-            
-            // ByteBuffer
-            Log.i( TAG, "Tamanho do Buffer: " + bb.capacity() );
-            Log.i( TAG, "Limite do Buffer: " + bb.limit() );
-        }*/
-        
-        imagem.close();
-        
-        /*byte[] valoresImagem = new byte[ imagemCamera.limit() ];
-        imagemCamera.rewind();
-        imagemCamera.get( valoresImagem );
-        
-        int media = 0;
-        for ( byte valor: valoresImagem )
-            media += Byte.toUnsignedInt( valor );
-        
-        Log.i( TAG, "Luminosidade média: " + ( (float) media / valoresImagem.length ) );*/
-    }
+    private Camera camera;
+    private Bluetooth bt;
     
     final int numLinhas = 2, numColunas = 4, numLinhasM1 = numLinhas - 1;
     
@@ -141,29 +74,15 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer, ImageAnalysis
     public void onSurfaceCreated( GL10 unused, EGLConfig config ) {
         // Câmera
         activity.requisitarPermissao( Manifest.permission.CAMERA );
-        ImageAnalysis analisador = new ImageAnalysis.Builder()
-            .setTargetResolution( new Size( larImgCam, altImgCam ) )
-            .setBackpressureStrategy( ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST )
-            .build();
-        analisador.setAnalyzer( cameraExecutor, this );
-        CameraSelector camera =  CameraSelector.DEFAULT_BACK_CAMERA;
-        ListenableFuture<ProcessCameraProvider> listenable =
-            ProcessCameraProvider.getInstance( activity );
-        listenable.addListener(
-            () -> {
-                try {
-                    listenable.get().bindToLifecycle( activity, camera, analisador );
-                } catch ( ExecutionException | InterruptedException e ) {
-                    e.printStackTrace();
-                }
-            },
-            ContextCompat.getMainExecutor( activity )
+        camera = new CameraLocal(
+                activity, CameraSelector.DEFAULT_BACK_CAMERA, 320, 240, 1
         );
+        camera.ligar();
         
         // Bluetooth
         activity.requisitarPermissao( Manifest.permission.BLUETOOTH );
         try {
-            bt = new Bluetooth( activity, tamImagem, imagemCamera );
+            bt = new Bluetooth( activity, camera.getTamImg(), camera.getImagem() );
         } catch ( Exception e ) {
             e.printStackTrace();
         }
@@ -189,11 +108,11 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer, ImageAnalysis
         GLES32.glBindTexture( GLES32.GL_TEXTURE_2D, texturas[0] );
         GLES32.glTexImage2D(
             GLES32.GL_TEXTURE_2D, 0, GLES32.GL_R8,
-            larImgCam, altImgCam, 0,
+            camera.getLargImg(), camera.getAltImg(), 0,
             GLES32.GL_RED, GLES32.GL_UNSIGNED_BYTE, null
         );
-
-        Resources resources = activity.getResources();
+        
+        /*Resources resources = activity.getResources();
         new ImagemOpenGL(
             BitmapFactory.decodeResource( resources, R.drawable.cachorrinho ),
             texturas[1]
@@ -201,7 +120,7 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer, ImageAnalysis
         new ImagemOpenGL(
             BitmapFactory.decodeResource( resources, R.drawable.gatinho ),
             texturas[2]
-        ).carregar();
+        ).carregar();*/
         
         /*float[] copiaTri = refTriangulo.clone();
         
@@ -239,12 +158,11 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer, ImageAnalysis
         
         objetos[0] = new Objeto(
             GLES32.GL_TRIANGLES, 2, 2,
-            refQuad, refElementos, texturas[1], true
+            refQuad, refElementos, texturas[0], true
         );
     }
     
-    private int viewWidth;
-    private int viewHeight;
+    private int viewWidth, viewHeight;
     
     @Override
     public void onSurfaceChanged( GL10 unused, int width, int height ) {
@@ -276,11 +194,10 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer, ImageAnalysis
     @Override
     public void onDrawFrame( GL10 unused ) {
         GLES32.glBindTexture( GLES32.GL_TEXTURE_2D, texturas[0] );
-        imagemCameraVis.rewind();
         GLES32.glTexSubImage2D(
             GLES32.GL_TEXTURE_2D, 0, 0, 0,
-            larImgCam,  altImgCam, GLES32.GL_RED,
-            GLES32.GL_UNSIGNED_BYTE, imagemCameraVis
+            camera.getLargImg(), camera.getAltImg(), GLES32.GL_RED,
+            GLES32.GL_UNSIGNED_BYTE, camera.getImagem()
         );
         
         GLES32.glBindFramebuffer( GLES32.GL_FRAMEBUFFER, fbo[0] );
@@ -311,6 +228,6 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer, ImageAnalysis
         GLES32.glDeleteRenderbuffers( rbo.length, rbo, 0 );
         GLES32.glDeleteFramebuffers( fbo.length, fbo, 0 );
         
-        cameraExecutor.shutdown();
+        camera.desligar();
     }
 }

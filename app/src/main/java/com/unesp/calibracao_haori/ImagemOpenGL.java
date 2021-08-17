@@ -30,11 +30,8 @@ public class ImagemOpenGL {
     }
     
     public void setTextura( int textura ) {
-        if ( textura < 0 ) {
-            this.textura = 0;
-            
-            return;
-        }
+        if ( textura < 0 )
+            textura = 0;
         
         this.textura = textura;
     }
