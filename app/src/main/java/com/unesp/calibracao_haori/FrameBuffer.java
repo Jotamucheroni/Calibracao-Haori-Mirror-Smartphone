@@ -7,17 +7,24 @@ public class FrameBuffer implements AutoCloseable {
     
     private int numRenderBuffer;
     private int largura, altura;
-    
-    private final int[] id;
+
+    private final int id;
     
     public FrameBuffer( int numRenderBuffer, int largura, int altura ) {
         setNumRenderBuffer( numRenderBuffer );
         setLargura( largura );
         setAltura( altura );
-        id = new int[1];
-        GLES32.glGenFramebuffers( 1, id, 0 );
         
+        int[] bufferId = new int[1];
+        GLES32.glGenFramebuffers( 1, bufferId, 0 );
+        id = bufferId[0];
         alocar();
+        
+        int[] drawBuffers = new int[numRenderBuffer];
+        for ( int i = 0; i < numRenderBuffer; i++ )
+            drawBuffers[i] = GLES32.GL_COLOR_ATTACHMENT0 + i;
+        GLES32.glBindFramebuffer( GLES32.GL_DRAW_FRAMEBUFFER, id );
+        GLES32.glDrawBuffers( numRenderBuffer, drawBuffers, 0 );
     }
     
     public FrameBuffer( int largura, int altura ) {
@@ -66,7 +73,7 @@ public class FrameBuffer implements AutoCloseable {
     }
     
     public int getId() {
-        return id[0];
+        return id;
     }
     
     public int getNumPix() {
@@ -79,11 +86,11 @@ public class FrameBuffer implements AutoCloseable {
 
     private RenderBuffer[] rb;
     
-    public void alocar() {
-        GLES32.glBindFramebuffer( GLES32.GL_DRAW_FRAMEBUFFER, id[0] );
+    private void alocar() {
         rb = new RenderBuffer[getNumRenderBuffer()];
+        GLES32.glBindFramebuffer( GLES32.GL_DRAW_FRAMEBUFFER, id );
         for ( int i = 0; i < rb.length; i++ ) {
-            rb[i] = new RenderBuffer( getLargura(), getAltura() );
+            rb[i] = new RenderBuffer( largura, altura );
             GLES32.glFramebufferRenderbuffer(
                 GLES32.GL_DRAW_FRAMEBUFFER, GLES32.GL_COLOR_ATTACHMENT0 + i,
                 GLES32.GL_RENDERBUFFER, rb[i].getId()
@@ -91,10 +98,51 @@ public class FrameBuffer implements AutoCloseable {
         }
     }
     
+    public void exibir( int x, int y, int largura, int altura, int numColunas, int numLinhas ) {
+        if( x < 0 )
+            x = 0;
+        if( y < 0 )
+            y = 0;
+        if( largura < 1 )
+            largura = 1;
+        if( altura < 1 )
+            altura = 1;
+        if( numColunas < 1 )
+            numColunas = 1;
+        if( numLinhas < 1 )
+            numLinhas = 1;
+        
+        int
+            numCelulas = numColunas * numLinhas,
+            largColuna = largura / numColunas, altLinha = altura / numLinhas;
+        GLES32.glBindFramebuffer( GLES32.GL_READ_FRAMEBUFFER, id );
+        GLES32.glBindFramebuffer( GLES32.GL_DRAW_FRAMEBUFFER, 0 );
+        for ( int i = 0; i < numCelulas; i++ ) {
+            int coluna = i % numColunas;
+            int linha = ( numLinhas - 1 ) - ( i / numColunas );
+            
+            GLES32.glReadBuffer( GLES32.GL_COLOR_ATTACHMENT0 + i );
+            GLES32.glBlitFramebuffer(
+                0, 0, this.largura, this.altura,
+                x + coluna * largColuna, y + linha * altLinha,
+                x + ( coluna + 1 ) * largColuna, y + ( linha  + 1 ) * altLinha,
+                GLES32.GL_COLOR_BUFFER_BIT, GLES32.GL_LINEAR
+            );
+        }
+    }
+    
+    public void exibir( int largura, int altura, int numColunas, int numLinhas ) {
+        exibir( 0, 0, largura, altura, numColunas, numLinhas );
+    }
+    
+    public void exibir( int largura, int altura ) {
+        exibir( 0, 0, largura, altura, 1, 1 );
+    }
+    
     @Override
     public void close() {
         for ( RenderBuffer r : rb )
             r.close();
-        GLES32.glDeleteFramebuffers( 1, id, 0 );
+        GLES32.glDeleteFramebuffers( 1, new int[]{ id }, 0 );
     }
 }

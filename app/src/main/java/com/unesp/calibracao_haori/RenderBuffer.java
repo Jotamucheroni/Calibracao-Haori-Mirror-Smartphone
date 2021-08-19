@@ -6,15 +6,16 @@ public class RenderBuffer implements AutoCloseable {
     public static final int numCompCor = 3;
     
     private int largura, altura;
-    
-    private final int[] id;
+
+    private final int id;
     
     public RenderBuffer( int largura, int altura ) {
         setLargura( largura );
         setAltura( altura );
-        id = new int[1];
-        GLES32.glGenRenderbuffers( 1, id, 0 );
         
+        int[] bufferId = new int[1];
+        GLES32.glGenRenderbuffers( 1, bufferId, 0 );
+        id = bufferId[0];
         alocar();
     }
     
@@ -45,7 +46,7 @@ public class RenderBuffer implements AutoCloseable {
     }
     
     public int getId() {
-        return id[0];
+        return id;
     }
     
     public int getNumPix() {
@@ -57,14 +58,12 @@ public class RenderBuffer implements AutoCloseable {
     }
     
     public void alocar() {
-        GLES32.glBindRenderbuffer( GLES32.GL_RENDERBUFFER, id[0] );
-        GLES32.glRenderbufferStorage(
-            GLES32.GL_RENDERBUFFER, GLES32.GL_RGB8, getLargura(), getAltura()
-        );
+        GLES32.glBindRenderbuffer( GLES32.GL_RENDERBUFFER, id );
+        GLES32.glRenderbufferStorage( GLES32.GL_RENDERBUFFER, GLES32.GL_RGB8, largura, altura );
     }
     
     @Override
     public void close() {
-        GLES32.glDeleteRenderbuffers( 1, id, 0 );
+        GLES32.glDeleteRenderbuffers( 1, new int[]{ id }, 0 );
     }
 }
