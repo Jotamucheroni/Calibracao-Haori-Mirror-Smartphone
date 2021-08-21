@@ -23,12 +23,6 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer, AutoCloseable
     }
     
     private final float[]
-/*        refTriangulo = {
-            // Coordenadas          Cor
-            0.0f,   0.622008459f,   1.0f, 0.0f, 0.0f,
-            -0.5f,  -0.311004243f,  0.0f, 1.0f, 0.0f,
-            0.5f,   -0.311004243f,  0.0f, 0.0f, 1.0f
-        },*/
         refQuad = {
             // Coordenadas  Textura
             -1.0f,  1.0f,   0.0f,   0.0f,
@@ -106,40 +100,6 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer, AutoCloseable
             texturas[2]
         ).carregar();*/
         
-        /*float[] copiaTri = refTriangulo.clone();
-        
-        objetos[0] = new Objeto( GLES32.GL_TRIANGLES, 2, 3, copiaTri );
-        
-        copiaTri[1] = 0.3f;     copiaTri[2] = 0.0f;
-        copiaTri[8] = 0.0f;
-        copiaTri[14] = 0.0f;
-        objetos[1] = new Objeto( GLES32.GL_TRIANGLES, 2, 3, copiaTri );
-        
-        copiaTri[1] = -0.1f;    copiaTri[2] = 1.0f;
-        copiaTri[8] = 1.0f;
-        copiaTri[14] = 1.0f;
-        objetos[2] = new Objeto( GLES32.GL_TRIANGLES, 2, 3, copiaTri );
-        
-        for ( int i = 0; i < 3; i ++ ) {
-            objetos[i].setEscala( 0.5f, 0.5f, 0.0f );
-            objetos[i].setTrans( 0.5f, 0.5f, 0.0f );
-        }
-        
-        objetos[3] = new Objeto(
-            GLES32.GL_TRIANGLES, 2, 2,
-            refQuad, refElementos, texturas[0]
-        );
-        objetos[3].setTrans( -0.5f, -0.5f, 0.0f );
-        
-        objetos[4] = new Objeto(
-            GLES32.GL_TRIANGLES, 2, 2,
-            refQuad, refElementos, texturas[1]
-        );
-        objetos[4].setTrans( -0.5f, 0.5f, 0.0f );
-        
-        for ( int i = 3; i < 5; i ++ )
-            objetos[i].setEscala( 0.25f, 0.25f, 0.0f );*/
-        
         GLES32.glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
         objeto = new Objeto[1];
         objeto[0] = new Objeto(
@@ -181,7 +141,6 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer, AutoCloseable
     
     @Override
     public void close() {
-        ProgramaOpenGL.close();
         GLES32.glDeleteTextures( texturas.length, texturas, 0 );
         frameBuffer.close();
         bluetooth.close();

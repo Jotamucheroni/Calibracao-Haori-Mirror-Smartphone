@@ -11,13 +11,9 @@ import java.nio.IntBuffer;
 
 public class Objeto {
     private final int modoDes;
-    
     private final int textura;
-    
     private final int numElementos;
-    
     private final int[] vao = new int[1];
-    
     private final int program;
     
     private final int
@@ -42,7 +38,7 @@ public class Objeto {
     public Objeto(
         int modoDes, int numCompPos, int numCompCor, int numCompTex,
         @NonNull float[] vertices, @NonNull int[] elementos,
-        int textura, boolean texPb
+        int textura, boolean texturaMonocromatica
     ) {
         this.modoDes = modoDes;
         this.textura = textura;
@@ -64,7 +60,9 @@ public class Objeto {
         fb.position( 0 );
         GLES32.glBufferData( GLES32.GL_ARRAY_BUFFER, tamVertices, fb, GLES32.GL_STATIC_DRAW );
         
-        program = ProgramaOpenGL.gerarPrograma( numCompCor, numCompTex, texPb );
+        program = ProgramaOpenGL.gerarPrograma(
+            numCompCor > 0, numCompTex > 0, texturaMonocromatica
+        );
         
         pontMatrizEscala = GLES32.glGetUniformLocation( program, "escala" );
         pontMatrizRotX = GLES32.glGetUniformLocation( program, "rotX" );
@@ -124,12 +122,12 @@ public class Objeto {
     public Objeto(
         int modoDes, int numCompPos, int numCompCor, int numCompTex,
         @NonNull float[] vertices,
-        int textura, boolean texPb
+        int textura, boolean texturaMonocromatica
     ) {
         this(
             modoDes, numCompPos, numCompCor, numCompTex,
             vertices, getElementos( numCompPos, numCompCor, numCompTex, vertices ),
-            textura, texPb
+            textura, texturaMonocromatica
         );
     }
     
@@ -158,24 +156,24 @@ public class Objeto {
     public Objeto(
         int modoDes, int numCompPos, int numCompTex,
         @NonNull float[] vertices, @NonNull int[] elementos,
-        int textura, boolean texPb
+        int textura, boolean texturaMonocromatica
     ) {
         this(
             modoDes, numCompPos, 0, numCompTex,
             vertices, elementos,
-            textura, texPb
+            textura, texturaMonocromatica
         );
     }
     
     public Objeto(
         int modoDes, int numCompPos, int numCompTex,
         @NonNull float[] vertices,
-        int textura, boolean texPb
+        int textura, boolean texturaMonocromatica
     ) {
         this(
             modoDes, numCompPos, 0, numCompTex,
             vertices, getElementos( numCompPos, 0, numCompTex, vertices ),
-            textura, texPb
+            textura, texturaMonocromatica
         );
     }
     
