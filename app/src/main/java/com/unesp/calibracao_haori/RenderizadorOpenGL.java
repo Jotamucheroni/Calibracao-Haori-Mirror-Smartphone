@@ -36,24 +36,9 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer, AutoCloseable
     private Camera camera;
     private Bluetooth bluetooth;
     private FrameBuffer frameBuffer;
+    private TexturaOpenGL texturaCamera;
     
-    final int[] texturas = new int[3];
-    private void setTexParams() {
-        GLES32.glTexParameteri(
-            GLES32.GL_TEXTURE_2D, GLES32.GL_TEXTURE_WRAP_S, GLES32.GL_CLAMP_TO_EDGE
-        );
-        GLES32.glTexParameteri(
-            GLES32.GL_TEXTURE_2D, GLES32.GL_TEXTURE_WRAP_T, GLES32.GL_CLAMP_TO_EDGE
-        );
-        GLES32.glTexParameteri(
-            GLES32.GL_TEXTURE_2D, GLES32.GL_TEXTURE_MIN_FILTER, GLES32.GL_LINEAR
-        );
-        GLES32.glTexParameteri(
-            GLES32.GL_TEXTURE_2D, GLES32.GL_TEXTURE_MAG_FILTER, GLES32.GL_LINEAR
-        );
-    }
-    
-    private Objeto[] objeto;
+    private Objeto imagemCamera;
     
     @Override
     public void onSurfaceCreated( GL10 unused, EGLConfig config ) {
@@ -76,35 +61,15 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer, AutoCloseable
         // Framebuffer
         frameBuffer = new FrameBuffer( 2, 640, 480 );
         
-        // Texturas
-        GLES32.glGenTextures( texturas.length, texturas, 0 );
-        for( int textura : texturas ) {
-            GLES32.glBindTexture( GLES32.GL_TEXTURE_2D, textura );
-            setTexParams();
-        }
-        
-        GLES32.glBindTexture( GLES32.GL_TEXTURE_2D, texturas[0] );
-        GLES32.glTexImage2D(
-            GLES32.GL_TEXTURE_2D, 0, GLES32.GL_R8,
-            camera.getLargImg(), camera.getAltImg(), 0,
-            GLES32.GL_RED, GLES32.GL_UNSIGNED_BYTE, null
+        texturaCamera = new TexturaOpenGL(
+            camera.getLargImg(), camera.getAltImg(), true
         );
-        
-        /*Resources resources = activity.getResources();
-        new ImagemOpenGL(
-            BitmapFactory.decodeResource( resources, R.drawable.cachorrinho ),
-            texturas[1]
-        ).carregar();
-        new ImagemOpenGL(
-            BitmapFactory.decodeResource( resources, R.drawable.gatinho ),
-            texturas[2]
-        ).carregar();*/
+        texturaCamera.alocar();
         
         GLES32.glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
-        objeto = new Objeto[1];
-        objeto[0] = new Objeto(
+        imagemCamera = new Objeto(
             GLES32.GL_TRIANGLES, 2, 2,
-            refQuad, refElementos, texturas[0], true
+            refQuad, refElementos, texturaCamera
         );
     }
     
@@ -118,20 +83,13 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer, AutoCloseable
     
     @Override
     public void onDrawFrame( GL10 unused ) {
-        // Copia a imagem atual da câmera traseira para a textura 0
-        GLES32.glBindTexture( GLES32.GL_TEXTURE_2D, texturas[0] );
-        GLES32.glTexSubImage2D(
-            GLES32.GL_TEXTURE_2D, 0, 0, 0,
-            camera.getLargImg(), camera.getAltImg(), GLES32.GL_RED,
-            GLES32.GL_UNSIGNED_BYTE, camera.getImagem()
-        );
+        texturaCamera.carregarImagem( camera.getImagem() );
         
         // Desenha no framebuffer intermediário
         GLES32.glBindFramebuffer( GLES32.GL_DRAW_FRAMEBUFFER, frameBuffer.getId() );
         GLES32.glClear( GLES32.GL_COLOR_BUFFER_BIT );
         GLES32.glViewport( 0, 0, frameBuffer.getLargura(), frameBuffer.getAltura() );
-        for ( Objeto obj : objeto)
-            obj.draw();
+        imagemCamera.draw();
         
         // Desenha na tela
         GLES32.glBindFramebuffer( GLES32.GL_DRAW_FRAMEBUFFER, 0 );
@@ -141,7 +99,7 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer, AutoCloseable
     
     @Override
     public void close() {
-        GLES32.glDeleteTextures( texturas.length, texturas, 0 );
+        texturaCamera.close();
         frameBuffer.close();
         bluetooth.close();
         camera.close();

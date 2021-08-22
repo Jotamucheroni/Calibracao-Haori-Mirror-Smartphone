@@ -11,7 +11,7 @@ import java.nio.IntBuffer;
 
 public class Objeto {
     private final int modoDes;
-    private final int textura;
+    private final TexturaOpenGL textura;
     private final int numElementos;
     private final int[] vao = new int[1];
     private final int program;
@@ -37,8 +37,7 @@ public class Objeto {
     
     public Objeto(
         int modoDes, int numCompPos, int numCompCor, int numCompTex,
-        @NonNull float[] vertices, @NonNull int[] elementos,
-        int textura, boolean texturaMonocromatica
+        @NonNull float[] vertices, @NonNull int[] elementos, TexturaOpenGL textura
     ) {
         this.modoDes = modoDes;
         this.textura = textura;
@@ -61,7 +60,8 @@ public class Objeto {
         GLES32.glBufferData( GLES32.GL_ARRAY_BUFFER, tamVertices, fb, GLES32.GL_STATIC_DRAW );
         
         program = ProgramaOpenGL.gerarPrograma(
-            numCompCor > 0, numCompTex > 0, texturaMonocromatica
+            numCompCor > 0, numCompTex > 0,
+            textura != null && textura.getMonocromatica()
         );
         
         pontMatrizEscala = GLES32.glGetUniformLocation( program, "escala" );
@@ -121,13 +121,11 @@ public class Objeto {
     
     public Objeto(
         int modoDes, int numCompPos, int numCompCor, int numCompTex,
-        @NonNull float[] vertices,
-        int textura, boolean texturaMonocromatica
+        @NonNull float[] vertices, TexturaOpenGL textura
     ) {
         this(
             modoDes, numCompPos, numCompCor, numCompTex,
-            vertices, getElementos( numCompPos, numCompCor, numCompTex, vertices ),
-            textura, texturaMonocromatica
+            vertices, getElementos( numCompPos, numCompCor, numCompTex, vertices ), textura
         );
     }
     
@@ -137,8 +135,7 @@ public class Objeto {
     ) {
         this(
             modoDes, numCompPos, numCompCor, 0,
-            vertices, elementos,
-            0, false
+            vertices, elementos, null
         );
     }
     
@@ -148,32 +145,27 @@ public class Objeto {
     ) {
         this(
             modoDes, numCompPos, numCompCor, 0,
-            vertices, getElementos( numCompPos, numCompCor, 0, vertices ),
-            0, false
+            vertices, getElementos( numCompPos, numCompCor, 0, vertices ), null
         );
     }
     
     public Objeto(
         int modoDes, int numCompPos, int numCompTex,
-        @NonNull float[] vertices, @NonNull int[] elementos,
-        int textura, boolean texturaMonocromatica
+        @NonNull float[] vertices, @NonNull int[] elementos, TexturaOpenGL textura
     ) {
         this(
             modoDes, numCompPos, 0, numCompTex,
-            vertices, elementos,
-            textura, texturaMonocromatica
+            vertices, elementos, textura
         );
     }
     
     public Objeto(
         int modoDes, int numCompPos, int numCompTex,
-        @NonNull float[] vertices,
-        int textura, boolean texturaMonocromatica
+        @NonNull float[] vertices, TexturaOpenGL textura
     ) {
         this(
             modoDes, numCompPos, 0, numCompTex,
-            vertices, getElementos( numCompPos, 0, numCompTex, vertices ),
-            textura, texturaMonocromatica
+            vertices, getElementos( numCompPos, 0, numCompTex, vertices ), textura
         );
     }
     
@@ -214,7 +206,8 @@ public class Objeto {
     }
     
     public void draw() {
-        GLES32.glBindTexture( GLES32.GL_TEXTURE_2D, textura );
+        if ( textura != null )
+            textura.bind();
         
         GLES32.glUseProgram( program );
         
