@@ -36,7 +36,7 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
     
     private Camera camera;
     private Bluetooth bluetooth;
-    private FrameBuffer frameBuffer;
+    private FrameBufferObject frameBufferCamera;
     private Textura texturaCamera;
     
     private Objeto imagemCamera;
@@ -60,7 +60,7 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
         bluetooth.abrirServidor();
         
         // Framebuffer
-        frameBuffer = new FrameBuffer( 2, 640, 480 );
+        frameBufferCamera = new FrameBufferObject( 2, 640, 480 );
         
         texturaCamera = new Textura(
             camera.getLargImg(), camera.getAltImg(), true
@@ -74,30 +74,31 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
         );
     }
     
-    private int larguraTela, alturaTela;
+    private final Tela tela = Tela.getInstance();
     
     @Override
     public void onSurfaceChanged( GL10 unused, int width, int height ) {
-        larguraTela = width;
-        alturaTela = height;
+        tela.setLargura( width );
+        tela.setAltura( height );
     }
     
     @Override
     public void onDrawFrame( GL10 unused ) {
         texturaCamera.carregarImagem( camera.getImagem() );
         
-        frameBuffer.draw( imagemCamera );
+        frameBufferCamera.clear();
+        frameBufferCamera.draw( imagemCamera );
         
-        // Desenha na tela
-        GLES32.glBindFramebuffer( GLES32.GL_DRAW_FRAMEBUFFER, 0 );
-        GLES32.glClear( GLES32.GL_COLOR_BUFFER_BIT );
-        frameBuffer.exibir( larguraTela, alturaTela, 2, 1 );
+        tela.clear();
+        frameBufferCamera.copiar(
+            tela, tela.getLargura(), tela.getAltura(), 2, 1
+        );
     }
     
     @Override
     public void close() {
         texturaCamera.close();
-        frameBuffer.close();
+        frameBufferCamera.close();
         bluetooth.close();
         camera.close();
     }
