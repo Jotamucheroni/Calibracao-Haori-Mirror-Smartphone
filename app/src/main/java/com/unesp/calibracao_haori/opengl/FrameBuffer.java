@@ -1,4 +1,4 @@
-package com.unesp.calibracao_haori;
+package com.unesp.calibracao_haori.opengl;
 
 import android.opengl.GLES32;
 
@@ -101,14 +101,19 @@ public class FrameBuffer implements AutoCloseable {
     public void exibir( int x, int y, int largura, int altura, int numColunas, int numLinhas ) {
         if( x < 0 )
             x = 0;
+        
         if( y < 0 )
             y = 0;
+        
         if( largura < 1 )
             largura = 1;
+        
         if( altura < 1 )
             altura = 1;
+        
         if( numColunas < 1 )
             numColunas = 1;
+        
         if( numLinhas < 1 )
             numLinhas = 1;
         

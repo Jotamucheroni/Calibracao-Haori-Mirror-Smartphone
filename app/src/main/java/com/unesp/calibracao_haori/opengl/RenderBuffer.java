@@ -1,4 +1,4 @@
-package com.unesp.calibracao_haori;
+package com.unesp.calibracao_haori.opengl;
 
 import android.opengl.GLES32;
 

@@ -1,4 +1,4 @@
-package com.unesp.calibracao_haori;
+package com.unesp.calibracao_haori.opengl;
 
 import android.Manifest;
 import android.opengl.GLES32;
@@ -6,6 +6,7 @@ import android.opengl.GLSurfaceView;
 
 import androidx.camera.core.CameraSelector;
 
+import com.unesp.calibracao_haori.MainActivity;
 import com.unesp.calibracao_haori.es.Bluetooth;
 import com.unesp.calibracao_haori.es.camera.Camera;
 import com.unesp.calibracao_haori.es.camera.CameraLocal;
@@ -13,10 +14,10 @@ import com.unesp.calibracao_haori.es.camera.CameraLocal;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-public class RenderizadorOpenGL implements GLSurfaceView.Renderer, AutoCloseable {
+public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
     private final MainActivity activity;
     
-    public RenderizadorOpenGL( MainActivity activity ) {
+    public Renderizador(MainActivity activity ) {
         super();
         
         this.activity = activity;
@@ -36,7 +37,7 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer, AutoCloseable
     private Camera camera;
     private Bluetooth bluetooth;
     private FrameBuffer frameBuffer;
-    private TexturaOpenGL texturaCamera;
+    private Textura texturaCamera;
     
     private Objeto imagemCamera;
     
@@ -61,7 +62,7 @@ public class RenderizadorOpenGL implements GLSurfaceView.Renderer, AutoCloseable
         // Framebuffer
         frameBuffer = new FrameBuffer( 2, 640, 480 );
         
-        texturaCamera = new TexturaOpenGL(
+        texturaCamera = new Textura(
             camera.getLargImg(), camera.getAltImg(), true
         );
         texturaCamera.alocar();

@@ -1,4 +1,4 @@
-package com.unesp.calibracao_haori;
+package com.unesp.calibracao_haori.opengl;
 
 import android.opengl.GLES32;
 import android.util.Log;
@@ -7,7 +7,7 @@ import androidx.annotation.NonNull;
 
 import java.util.Arrays;
 
-public class ConfigOpenGL {
+public class Config {
     public static void imprimir( @NonNull int[] configs ) {
         final int[] valConfig =  new int[1];
         

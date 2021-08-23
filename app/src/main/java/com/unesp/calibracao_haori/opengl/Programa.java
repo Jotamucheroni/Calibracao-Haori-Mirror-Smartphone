@@ -1,10 +1,10 @@
-package com.unesp.calibracao_haori;
+package com.unesp.calibracao_haori.opengl;
 
 import android.opengl.GLES32;
 
 import androidx.annotation.NonNull;
 
-public class ProgramaOpenGL {
+public class Programa {
     public static int loadShader( int type, String shaderCode ) {
         int shader = GLES32.glCreateShader( type );
         

@@ -1,16 +1,16 @@
-package com.unesp.calibracao_haori;
+package com.unesp.calibracao_haori.opengl;
 
 import android.opengl.GLES32;
 
 import java.nio.ByteBuffer;
 
-public class TexturaOpenGL implements AutoCloseable {
+public class Textura implements AutoCloseable {
     private final int id;
     private int largura, altura;
     private boolean monocromatica;
     private int formatoImagem, formatoInterno;
     
-    public TexturaOpenGL( int largura, int altura, boolean monocromatica ) {
+    public Textura(int largura, int altura, boolean monocromatica ) {
         setLargura( largura );
         setAltura( altura );
         setMonocromatica( monocromatica );
@@ -34,15 +34,15 @@ public class TexturaOpenGL implements AutoCloseable {
         );
     }
     
-    public TexturaOpenGL( int largura, int altura ) {
+    public Textura(int largura, int altura ) {
         this( largura, altura, false );
     }
     
-    public TexturaOpenGL( boolean monocromatica ) {
+    public Textura(boolean monocromatica ) {
         this( 1, 1, monocromatica );
     }
     
-    public TexturaOpenGL() {
+    public Textura() {
         this( 1, 1, false );
     }
     

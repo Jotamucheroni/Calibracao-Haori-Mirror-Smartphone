@@ -1,20 +1,22 @@
-package com.unesp.calibracao_haori;
+package com.unesp.calibracao_haori.opengl;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 
-public class SuperficieOpenGL extends GLSurfaceView implements AutoCloseable {
-    private RenderizadorOpenGL renderizador = null;
+import com.unesp.calibracao_haori.MainActivity;
+
+public class Superficie extends GLSurfaceView implements AutoCloseable {
+    private Renderizador renderizador = null;
     
-    public SuperficieOpenGL( Context context ) {
+    public Superficie( Context context ) {
         super( context );
     }
     
-    public SuperficieOpenGL( MainActivity activity ) {
+    public Superficie(MainActivity activity ) {
         super( activity );
         
         setEGLContextClientVersion( 3 );
-        renderizador =  new RenderizadorOpenGL( activity );
+        renderizador =  new Renderizador( activity );
         setRenderer( renderizador );
     }
     

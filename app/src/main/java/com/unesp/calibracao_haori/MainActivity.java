@@ -13,14 +13,16 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.activity.result.contract.ActivityResultContracts.RequestPermission;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.unesp.calibracao_haori.opengl.Superficie;
+
 public class MainActivity extends AppCompatActivity {
-    private SuperficieOpenGL glView;
+    private Superficie glView;
     
     @Override
     protected void onCreate( Bundle savedInstanceState ) {
         super.onCreate( savedInstanceState );
         
-        glView = new SuperficieOpenGL( this );
+        glView = new Superficie( this );
         setContentView( glView );
         getWindow().addFlags( WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON );
     }

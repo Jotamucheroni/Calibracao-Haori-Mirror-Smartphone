@@ -1,21 +1,21 @@
-package com.unesp.calibracao_haori;
+package com.unesp.calibracao_haori.opengl;
 
 import android.graphics.Bitmap;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public class ImagemOpenGL extends TexturaOpenGL {
+public class Imagem extends Textura {
     private Bitmap imagem;
     
-    public ImagemOpenGL( Bitmap imagem, boolean monocromatica ) {
+    public Imagem(Bitmap imagem, boolean monocromatica ) {
         super();
         
         setImagem( imagem );
         setMonocromatica( monocromatica );
     }
     
-    ImagemOpenGL( Bitmap imagem ) {
+    Imagem( Bitmap imagem ) {
         this( imagem, false );
     }
     
@@ -27,8 +27,8 @@ public class ImagemOpenGL extends TexturaOpenGL {
             imagem = imagem.copy( null, false );
         
         this.imagem = imagem;
-        setLargura( imagem.getWidth() );
-        setAltura( imagem.getHeight() );
+        setLargura( this.imagem.getWidth() );
+        setAltura( this.imagem.getHeight() );
         alocar();
     }
     

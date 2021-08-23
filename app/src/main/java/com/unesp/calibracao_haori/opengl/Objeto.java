@@ -1,4 +1,4 @@
-package com.unesp.calibracao_haori;
+package com.unesp.calibracao_haori.opengl;
 
 import android.opengl.GLES32;
 
@@ -11,7 +11,7 @@ import java.nio.IntBuffer;
 
 public class Objeto {
     private final int modoDes;
-    private final TexturaOpenGL textura;
+    private final Textura textura;
     private final int numElementos;
     private final int[] vao = new int[1];
     private final int program;
@@ -37,7 +37,7 @@ public class Objeto {
     
     public Objeto(
         int modoDes, int numCompPos, int numCompCor, int numCompTex,
-        @NonNull float[] vertices, @NonNull int[] elementos, TexturaOpenGL textura
+        @NonNull float[] vertices, @NonNull int[] elementos, Textura textura
     ) {
         this.modoDes = modoDes;
         this.textura = textura;
@@ -59,7 +59,7 @@ public class Objeto {
         fb.position( 0 );
         GLES32.glBufferData( GLES32.GL_ARRAY_BUFFER, tamVertices, fb, GLES32.GL_STATIC_DRAW );
         
-        program = ProgramaOpenGL.gerarPrograma(
+        program = Programa.gerarPrograma(
             numCompCor > 0, numCompTex > 0,
             textura != null && textura.getMonocromatica()
         );
@@ -121,7 +121,7 @@ public class Objeto {
     
     public Objeto(
         int modoDes, int numCompPos, int numCompCor, int numCompTex,
-        @NonNull float[] vertices, TexturaOpenGL textura
+        @NonNull float[] vertices, Textura textura
     ) {
         this(
             modoDes, numCompPos, numCompCor, numCompTex,
@@ -151,7 +151,7 @@ public class Objeto {
     
     public Objeto(
         int modoDes, int numCompPos, int numCompTex,
-        @NonNull float[] vertices, @NonNull int[] elementos, TexturaOpenGL textura
+        @NonNull float[] vertices, @NonNull int[] elementos, Textura textura
     ) {
         this(
             modoDes, numCompPos, 0, numCompTex,
@@ -161,7 +161,7 @@ public class Objeto {
     
     public Objeto(
         int modoDes, int numCompPos, int numCompTex,
-        @NonNull float[] vertices, TexturaOpenGL textura
+        @NonNull float[] vertices, Textura textura
     ) {
         this(
             modoDes, numCompPos, 0, numCompTex,
