@@ -23,7 +23,7 @@ public class FrameBuffer implements AutoCloseable {
         int[] drawBuffers = new int[numRenderBuffer];
         for ( int i = 0; i < numRenderBuffer; i++ )
             drawBuffers[i] = GLES32.GL_COLOR_ATTACHMENT0 + i;
-        GLES32.glBindFramebuffer( GLES32.GL_DRAW_FRAMEBUFFER, id );
+        bindDraw();
         GLES32.glDrawBuffers( numRenderBuffer, drawBuffers, 0 );
     }
     
@@ -88,7 +88,7 @@ public class FrameBuffer implements AutoCloseable {
     
     private void alocar() {
         rb = new RenderBuffer[getNumRenderBuffer()];
-        GLES32.glBindFramebuffer( GLES32.GL_DRAW_FRAMEBUFFER, id );
+        bindDraw();
         for ( int i = 0; i < rb.length; i++ ) {
             rb[i] = new RenderBuffer( largura, altura );
             GLES32.glFramebufferRenderbuffer(
@@ -96,6 +96,46 @@ public class FrameBuffer implements AutoCloseable {
                 GLES32.GL_RENDERBUFFER, rb[i].getId()
             );
         }
+    }
+    
+    public void bindDraw() {
+        GLES32.glBindFramebuffer( GLES32.GL_DRAW_FRAMEBUFFER, id );
+    }
+    
+    public void bindRead() {
+        GLES32.glBindFramebuffer( GLES32.GL_READ_FRAMEBUFFER, id );
+    }
+    
+    public void bind() {
+        GLES32.glBindFramebuffer( GLES32.GL_FRAMEBUFFER, id );
+    }
+    
+    public void draw( int x, int y, int largura, int altura, Objeto objeto ) {
+        bindDraw();
+        GLES32.glClear( GLES32.GL_COLOR_BUFFER_BIT );
+        GLES32.glViewport( x, y, largura, altura );
+        objeto.draw();
+    }
+    
+    public void draw( int largura, int altura, Objeto objeto ) {
+        draw( 0, 0, largura, altura, objeto );
+    }
+    
+    public void draw( Objeto objeto ) {
+        draw( 0, 0, this.largura, this.altura, objeto );
+    }
+    
+    public void draw( int x, int y, int largura, int altura, Objeto[] objeto ) {
+        for( Objeto obj : objeto )
+            draw( x, y, largura, altura, obj );
+    }
+    
+    public void draw( int largura, int altura, Objeto[] objeto ) {
+        draw( 0, 0, largura, altura, objeto );
+    }
+    
+    public void draw( Objeto[] objeto ) {
+        draw( 0, 0, this.largura, this.altura, objeto );
     }
     
     public void exibir( int x, int y, int largura, int altura, int numColunas, int numLinhas ) {
@@ -120,7 +160,7 @@ public class FrameBuffer implements AutoCloseable {
         int
             numCelulas = numColunas * numLinhas,
             largColuna = largura / numColunas, altLinha = altura / numLinhas;
-        GLES32.glBindFramebuffer( GLES32.GL_READ_FRAMEBUFFER, id );
+        bindRead();
         GLES32.glBindFramebuffer( GLES32.GL_DRAW_FRAMEBUFFER, 0 );
         for ( int i = 0; i < numCelulas; i++ ) {
             int coluna = i % numColunas;

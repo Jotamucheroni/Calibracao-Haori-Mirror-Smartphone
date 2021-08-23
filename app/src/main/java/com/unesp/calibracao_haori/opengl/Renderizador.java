@@ -86,11 +86,7 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
     public void onDrawFrame( GL10 unused ) {
         texturaCamera.carregarImagem( camera.getImagem() );
         
-        // Desenha no framebuffer intermediário
-        GLES32.glBindFramebuffer( GLES32.GL_DRAW_FRAMEBUFFER, frameBuffer.getId() );
-        GLES32.glClear( GLES32.GL_COLOR_BUFFER_BIT );
-        GLES32.glViewport( 0, 0, frameBuffer.getLargura(), frameBuffer.getAltura() );
-        imagemCamera.draw();
+        frameBuffer.draw( imagemCamera );
         
         // Desenha na tela
         GLES32.glBindFramebuffer( GLES32.GL_DRAW_FRAMEBUFFER, 0 );
