@@ -10,6 +10,8 @@ import com.unesp.calibracao_haori.MainActivity;
 import com.unesp.calibracao_haori.es.Bluetooth;
 import com.unesp.calibracao_haori.es.camera.Camera;
 import com.unesp.calibracao_haori.es.camera.CameraLocal;
+import com.unesp.calibracao_haori.opengl.renderbuffer.FrameBufferObject;
+import com.unesp.calibracao_haori.opengl.renderbuffer.Tela;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;

@@ -1,6 +1,8 @@
-package com.unesp.calibracao_haori.opengl;
+package com.unesp.calibracao_haori.opengl.renderbuffer;
 
 import android.opengl.GLES32;
+
+import com.unesp.calibracao_haori.opengl.Objeto;
 
 public abstract class FrameBuffer {
     private int largura, altura;
