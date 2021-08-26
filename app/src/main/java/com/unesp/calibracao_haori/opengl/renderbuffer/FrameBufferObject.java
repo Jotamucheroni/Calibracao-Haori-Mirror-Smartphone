@@ -4,12 +4,14 @@ import android.opengl.GLES32;
 
 import com.unesp.calibracao_haori.opengl.RenderBuffer;
 
+import java.nio.ByteBuffer;
+
 public class FrameBufferObject extends FrameBuffer implements AutoCloseable {
-    public static final int numCompCor = 3;
+    public static final int numeroComponentesCor = RenderBuffer.numeroComponentesCor;
     
     private int numRenderBuffer;
     
-    public FrameBufferObject(int numRenderBuffer, int largura, int altura ) {
+    public FrameBufferObject( int numRenderBuffer, int largura, int altura ) {
         setNumRenderBuffer( numRenderBuffer );
         setLargura( largura );
         setAltura( altura );
@@ -26,16 +28,8 @@ public class FrameBufferObject extends FrameBuffer implements AutoCloseable {
         GLES32.glDrawBuffers( numRenderBuffer, drawBuffers, 0 );
     }
     
-    public FrameBufferObject(int largura, int altura ) {
+    public FrameBufferObject( int largura, int altura ) {
         this( 1, largura, altura );
-    }
-    
-    public FrameBufferObject(int numRenderBuffer ) {
-        this( numRenderBuffer, 1, 1 );
-    }
-    
-    public FrameBufferObject() {
-        this( 1, 1, 1 );
     }
     
     public void setNumRenderBuffer( int numRenderBuffer ) {
@@ -54,7 +48,7 @@ public class FrameBufferObject extends FrameBuffer implements AutoCloseable {
     }
     
     public int getNumBytes() {
-        return getNumPix() * FrameBufferObject.numCompCor;
+        return getNumPix() * FrameBufferObject.numeroComponentesCor;
     }
 
     private RenderBuffer[] rb;
@@ -95,8 +89,8 @@ public class FrameBufferObject extends FrameBuffer implements AutoCloseable {
             numLinhas = 1;
         
         int
-                numCelulas = numColunas * numLinhas,
-                largColuna = largura / numColunas, altLinha = altura / numLinhas;
+            numCelulas = numColunas * numLinhas,
+            largColuna = largura / numColunas, altLinha = altura / numLinhas;
         
         bindRead();
         destino.bindDraw();
@@ -127,6 +121,67 @@ public class FrameBufferObject extends FrameBuffer implements AutoCloseable {
         int largura, int altura
     ) {
         copiar( destino, 0, 0, largura, altura, 1, 1 );
+    }
+    
+    public void lerRenderBuffer(
+        int numero,
+        int x, int y, int largura, int altura,
+        ByteBuffer destino
+    ) {
+        if ( destino == null )
+            return;
+        
+        if ( numero < 1 )
+            numero = 1;
+        else if ( numero > numRenderBuffer )
+            numero = numRenderBuffer;
+        
+        bindRead();
+        GLES32.glReadBuffer( GLES32.GL_COLOR_ATTACHMENT0 + ( numero - 1 ) );
+        GLES32.glReadPixels(
+            x, y, largura, altura,
+            GLES32.GL_RGBA, GLES32.GL_UNSIGNED_BYTE,
+            destino
+        );
+    }
+
+    public void lerRenderBuffer(
+        int x, int y, int largura, int altura,
+        ByteBuffer destino
+    ) {
+        lerRenderBuffer( 1, 0, 0, largura, altura, destino );
+    }
+    
+    public void lerRenderBuffer(
+        int numero,
+        int largura, int altura,
+        ByteBuffer destino
+    ) {
+        lerRenderBuffer( numero, 0, 0, largura, altura, destino );
+    }
+    
+    public void lerRenderBuffer(
+            int largura, int altura,
+            ByteBuffer destino
+    ) {
+        lerRenderBuffer( 1, 0, 0, largura, altura, destino );
+    }
+    
+    public void lerRenderBuffer(
+        int numero,
+        ByteBuffer destino
+    ) {
+        lerRenderBuffer(
+            numero, 0, 0, getLargura(), getAltura(), destino
+        );
+    }
+    
+    public void lerRenderBuffer(
+        ByteBuffer destino
+    ) {
+        lerRenderBuffer(
+            1, 0, 0, getLargura(), getAltura(), destino
+        );
     }
     
     @Override

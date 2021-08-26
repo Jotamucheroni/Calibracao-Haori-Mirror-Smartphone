@@ -3,7 +3,7 @@ package com.unesp.calibracao_haori.opengl;
 import android.opengl.GLES32;
 
 public class RenderBuffer implements AutoCloseable {
-    public static final int numCompCor = 3;
+    public static final int numeroComponentesCor = 4; 
     
     private int largura, altura;
 
@@ -16,11 +16,8 @@ public class RenderBuffer implements AutoCloseable {
         int[] bufferId = new int[1];
         GLES32.glGenRenderbuffers( 1, bufferId, 0 );
         id = bufferId[0];
+        
         alocar();
-    }
-    
-    public RenderBuffer() {
-        this( 1, 1 );
     }
     
     public void setLargura( int largura ) {
@@ -54,12 +51,12 @@ public class RenderBuffer implements AutoCloseable {
     }
     
     public int getNumBytes() {
-        return getNumPix() * RenderBuffer.numCompCor;
+        return getNumPix() * RenderBuffer.numeroComponentesCor;
     }
     
     public void alocar() {
         GLES32.glBindRenderbuffer( GLES32.GL_RENDERBUFFER, id );
-        GLES32.glRenderbufferStorage( GLES32.GL_RENDERBUFFER, GLES32.GL_RGB8, largura, altura );
+        GLES32.glRenderbufferStorage( GLES32.GL_RENDERBUFFER, GLES32.GL_RGBA8, largura, altura );
     }
     
     @Override
