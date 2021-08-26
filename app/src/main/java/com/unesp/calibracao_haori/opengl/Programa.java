@@ -85,7 +85,7 @@ public class Programa {
         return codigo.toString();
     }
     
-    private static final int numSaidas = 2;
+    private static final int numSaidas = 3;
     
     @NonNull
     public static String gerarCodigoFragmentShader(
@@ -185,6 +185,7 @@ public class Programa {
             +   "\n"
             +   "    saida[0] = pixelCentral;\n"
             +   "    saida[1] = sobel;\n"
+            +   "    saida[2] = ( sobel.r > 1.5 ) ? vec4( 1.0 ) : vec4( 0.0 );\n"
             +   "}"
         );
         

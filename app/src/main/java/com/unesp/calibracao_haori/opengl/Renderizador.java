@@ -17,12 +17,12 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
-    private final MainActivity activity;
+    private final MainActivity atividade;
     
-    public Renderizador(MainActivity activity ) {
+    public Renderizador( MainActivity atividade ) {
         super();
         
-        this.activity = activity;
+        this.atividade = atividade;
     }
     
     private final float[]
@@ -42,27 +42,19 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
     private Textura texturaCamera;
     
     private Objeto imagemCamera;
+    private DetectorBorda detectorBordaCamera, detectorTeste, detectorTeste2;
     
     @Override
     public void onSurfaceCreated( GL10 unused, EGLConfig config ) {
         // Câmera
-        activity.requisitarPermissao( Manifest.permission.CAMERA );
+        atividade.requisitarPermissao( Manifest.permission.CAMERA );
         camera = new CameraLocal(
-                activity, CameraSelector.DEFAULT_BACK_CAMERA, 320, 240, 1
+            atividade, CameraSelector.DEFAULT_BACK_CAMERA, 320, 240, 1
         );
         camera.ligar();
         
-        // Bluetooth
-        activity.requisitarPermissao( Manifest.permission.BLUETOOTH );
-        try {
-            bluetooth = new Bluetooth( activity, camera.getTamImg(), camera.getImagem() );
-        } catch ( Exception e ) {
-            e.printStackTrace();
-        }
-        bluetooth.abrirServidor();
-        
         // Framebuffer
-        frameBufferCamera = new FrameBufferObject( 2, 640, 480 );
+        frameBufferCamera = new FrameBufferObject( 3, 640, 480 );
         
         texturaCamera = new Textura(
             camera.getLargImg(), camera.getAltImg(), true
@@ -74,6 +66,24 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
             GLES32.GL_TRIANGLES, 2, 2,
             refQuad, refElementos, texturaCamera
         );
+        
+        detectorBordaCamera = new DetectorBorda( frameBufferCamera.getNumBytes() );
+        detectorBordaCamera.alocar();
+        
+        detectorTeste = new DetectorBorda( frameBufferCamera.getNumBytes() );
+        detectorTeste.alocar();
+
+        detectorTeste2 = new DetectorBorda( frameBufferCamera.getNumBytes() );
+        detectorTeste2.alocar();
+
+        // Bluetooth
+        atividade.requisitarPermissao( Manifest.permission.BLUETOOTH );
+        try {
+            bluetooth = new Bluetooth( atividade, camera.getTamImg(), camera.getImagem() );
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
+        bluetooth.abrirServidor();
     }
     
     private final Tela tela = Tela.getInstance();
@@ -91,14 +101,37 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
         frameBufferCamera.clear();
         frameBufferCamera.draw( imagemCamera );
         
+        if ( detectorBordaCamera.pronto() ) {
+            System.out.println( "Píxeis(1): " + detectorBordaCamera.getSaida() );
+            frameBufferCamera.lerRenderBuffer( 1, detectorBordaCamera.getImagem() );
+            detectorBordaCamera.executar();
+        }
+        
+        if ( detectorTeste.pronto() ) {
+            System.out.println( "Píxeis(2): " + detectorTeste.getSaida() );
+            frameBufferCamera.lerRenderBuffer( 2, detectorTeste.getImagem() );
+            detectorTeste.executar();
+        }
+        
+        if ( detectorTeste2.pronto() ) {
+            System.out.println( "Píxeis(3): " + detectorTeste2.getSaida() );
+            frameBufferCamera.lerRenderBuffer( 3, detectorTeste2.getImagem() );
+            detectorTeste2.executar();
+        }
+        
+        System.out.println( " " );
+        
         tela.clear();
         frameBufferCamera.copiar(
-            tela, tela.getLargura(), tela.getAltura(), 2, 1
+            tela, tela.getLargura(), tela.getAltura(), 3, 1
         );
     }
     
     @Override
     public void close() {
+        detectorBordaCamera.close();
+        detectorTeste.close();
+        detectorTeste2.close();
         texturaCamera.close();
         frameBufferCamera.close();
         bluetooth.close();
