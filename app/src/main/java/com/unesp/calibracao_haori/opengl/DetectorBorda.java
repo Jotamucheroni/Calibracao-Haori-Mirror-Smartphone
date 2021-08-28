@@ -98,12 +98,6 @@ public class DetectorBorda implements AutoCloseable {
     
     // Verifica se todos os parâmetros obrigatórios foram devidamente inicializados
     public boolean preparado() {
-        /*ByteBuffer visImagem;
-        
-        synchronized ( this ) {
-            visImagem = this.visImagem;
-        }*/
-        
         synchronized ( this ) {
             return imagem != null && visImagem != null;
         }

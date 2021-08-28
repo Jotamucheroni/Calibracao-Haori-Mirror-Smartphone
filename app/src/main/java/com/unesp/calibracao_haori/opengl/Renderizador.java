@@ -42,18 +42,16 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
     private Textura texturaCamera;
     
     private Objeto imagemCamera;
-    private DetectorBorda detectorBordaCamera, detectorTeste, detectorTeste2;
+    private DetectorBorda detectorBordaCamera;
     
     @Override
     public void onSurfaceCreated( GL10 unused, EGLConfig config ) {
-        // Câmera
         atividade.requisitarPermissao( Manifest.permission.CAMERA );
         camera = new CameraLocal(
             atividade, CameraSelector.DEFAULT_BACK_CAMERA, 320, 240, 1
         );
         camera.ligar();
         
-        // Framebuffer
         frameBufferCamera = new FrameBufferObject( 3, 640, 480 );
         
         texturaCamera = new Textura(
@@ -70,19 +68,8 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
         detectorBordaCamera = new DetectorBorda( frameBufferCamera.getNumBytes() );
         detectorBordaCamera.alocar();
         
-        detectorTeste = new DetectorBorda( frameBufferCamera.getNumBytes() );
-        detectorTeste.alocar();
-
-        detectorTeste2 = new DetectorBorda( frameBufferCamera.getNumBytes() );
-        detectorTeste2.alocar();
-
-        // Bluetooth
         atividade.requisitarPermissao( Manifest.permission.BLUETOOTH );
-        try {
-            bluetooth = new Bluetooth( atividade, camera.getTamImg(), camera.getImagem() );
-        } catch ( Exception e ) {
-            e.printStackTrace();
-        }
+        bluetooth = new Bluetooth( atividade, camera.getTamImg(), camera.getImagem() );
         bluetooth.abrirServidor();
     }
     
@@ -102,24 +89,10 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
         frameBufferCamera.draw( imagemCamera );
         
         if ( detectorBordaCamera.pronto() ) {
-            System.out.println( "Píxeis(1): " + detectorBordaCamera.getSaida() );
-            frameBufferCamera.lerRenderBuffer( 1, detectorBordaCamera.getImagem() );
+//            System.out.println( "Píxeis: " + detectorBordaCamera.getSaida() );
+            frameBufferCamera.lerRenderBuffer( 3, detectorBordaCamera.getImagem() );
             detectorBordaCamera.executar();
         }
-        
-        if ( detectorTeste.pronto() ) {
-            System.out.println( "Píxeis(2): " + detectorTeste.getSaida() );
-            frameBufferCamera.lerRenderBuffer( 2, detectorTeste.getImagem() );
-            detectorTeste.executar();
-        }
-        
-        if ( detectorTeste2.pronto() ) {
-            System.out.println( "Píxeis(3): " + detectorTeste2.getSaida() );
-            frameBufferCamera.lerRenderBuffer( 3, detectorTeste2.getImagem() );
-            detectorTeste2.executar();
-        }
-        
-        System.out.println( " " );
         
         tela.clear();
         frameBufferCamera.copiar(
@@ -129,12 +102,10 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
     
     @Override
     public void close() {
+        bluetooth.close();
         detectorBordaCamera.close();
-        detectorTeste.close();
-        detectorTeste2.close();
         texturaCamera.close();
         frameBufferCamera.close();
-        bluetooth.close();
         camera.close();
     }
 }
