@@ -1,4 +1,4 @@
-package com.unesp.calibracao_haori.opengl.renderbuffer;
+package com.unesp.calibracao_haori.opengl.framebuffer;
 
 import android.opengl.GLES32;
 

@@ -8,10 +8,9 @@ import androidx.camera.core.CameraSelector;
 
 import com.unesp.calibracao_haori.MainActivity;
 import com.unesp.calibracao_haori.es.Bluetooth;
-import com.unesp.calibracao_haori.es.camera.Camera;
+import com.unesp.calibracao_haori.es.Dispositivo;
 import com.unesp.calibracao_haori.es.camera.CameraLocal;
-import com.unesp.calibracao_haori.opengl.renderbuffer.FrameBufferObject;
-import com.unesp.calibracao_haori.opengl.renderbuffer.Tela;
+import com.unesp.calibracao_haori.opengl.framebuffer.Tela;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -25,7 +24,7 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
         this.atividade = atividade;
     }
     
-    private final float[]
+    public static final float[]
         refQuad = {
             // Coordenadas  Textura
             -1.0f,  1.0f,   0.0f,   0.0f,
@@ -34,42 +33,29 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
             1.0f,   1.0f,   1.0f,   0.0f
         };
     
-    private final int[] refElementos = { 0, 1, 2, 2, 3, 0 };
+    public static final int[] refElementos = { 0, 1, 2, 2, 3, 0 };
     
-    private Camera camera;
+    private Dispositivo cameraTraseira;
     private Bluetooth bluetooth;
-    private FrameBufferObject frameBufferCamera;
-    private Textura texturaCamera;
-    
-    private Objeto imagemCamera;
-    private DetectorBorda detectorBordaCamera;
     
     @Override
     public void onSurfaceCreated( GL10 unused, EGLConfig config ) {
-        atividade.requisitarPermissao( Manifest.permission.CAMERA );
-        camera = new CameraLocal(
-            atividade, CameraSelector.DEFAULT_BACK_CAMERA, 320, 240, 1
-        );
-        camera.ligar();
-        
-        frameBufferCamera = new FrameBufferObject( 3, 640, 480 );
-        
-        texturaCamera = new Textura(
-            camera.getLargImg(), camera.getAltImg(), true
-        );
-        texturaCamera.alocar();
-        
         GLES32.glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
-        imagemCamera = new Objeto(
-            GLES32.GL_TRIANGLES, 2, 2,
-            refQuad, refElementos, texturaCamera
+        
+        cameraTraseira = new Dispositivo(
+            "Câmera traseira",
+            new CameraLocal(
+                atividade, CameraSelector.DEFAULT_BACK_CAMERA, 320, 240, 1
+            )
         );
+        cameraTraseira.alocar();
+        atividade.requisitarPermissao( Manifest.permission.CAMERA );
+        cameraTraseira.ligar();
         
-        detectorBordaCamera = new DetectorBorda( frameBufferCamera.getNumBytes() );
-        detectorBordaCamera.alocar();
-        
-        atividade.requisitarPermissao( Manifest.permission.BLUETOOTH );
-        bluetooth = new Bluetooth( atividade, camera.getTamImg(), camera.getImagem() );
+        bluetooth = new Bluetooth(
+            atividade,
+            cameraTraseira.getCamera().getTamImg(), cameraTraseira.getCamera().getImagem()
+        );
         bluetooth.abrirServidor();
     }
     
@@ -83,19 +69,12 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
     
     @Override
     public void onDrawFrame( GL10 unused ) {
-        texturaCamera.carregarImagem( camera.getImagem() );
-        
-        frameBufferCamera.clear();
-        frameBufferCamera.draw( imagemCamera );
-        
-        if ( detectorBordaCamera.pronto() ) {
-//            System.out.println( "Píxeis: " + detectorBordaCamera.getSaida() );
-            frameBufferCamera.lerRenderBuffer( 3, detectorBordaCamera.getImagem() );
-            detectorBordaCamera.executar();
-        }
+        cameraTraseira.atualizarTextura();
+        cameraTraseira.draw();
+        cameraTraseira.atualizarImagemDetector( 3 );
         
         tela.clear();
-        frameBufferCamera.copiar(
+        cameraTraseira.getFrameBufferObject().copiar(
             tela, tela.getLargura(), tela.getAltura(), 3, 1
         );
     }
@@ -103,9 +82,6 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
     @Override
     public void close() {
         bluetooth.close();
-        detectorBordaCamera.close();
-        texturaCamera.close();
-        frameBufferCamera.close();
-        camera.close();
+        cameraTraseira.close();
     }
 }

@@ -1,4 +1,4 @@
-package com.unesp.calibracao_haori.opengl.renderbuffer;
+package com.unesp.calibracao_haori.opengl.framebuffer;
 
 public class Tela extends FrameBuffer {
     private static Tela instancia;

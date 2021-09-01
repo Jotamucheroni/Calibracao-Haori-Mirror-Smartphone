@@ -1,4 +1,4 @@
-package com.unesp.calibracao_haori.opengl.renderbuffer;
+package com.unesp.calibracao_haori.opengl.framebuffer;
 
 import android.opengl.GLES32;
 
@@ -19,7 +19,7 @@ public class FrameBufferObject extends FrameBuffer implements AutoCloseable {
         int[] bufferId = new int[1];
         GLES32.glGenFramebuffers( 1, bufferId, 0 );
         setId( bufferId[0] );
-        alocar();
+//        alocar();
         
         int[] drawBuffers = new int[numRenderBuffer];
         for ( int i = 0; i < numRenderBuffer; i++ )
@@ -50,10 +50,10 @@ public class FrameBufferObject extends FrameBuffer implements AutoCloseable {
     public int getNumBytes() {
         return getNumPix() * FrameBufferObject.numeroComponentesCor;
     }
-
+    
     private RenderBuffer[] rb;
     
-    private void alocar() {
+    public void alocar() {
         rb = new RenderBuffer[getNumRenderBuffer()];
         bindDraw();
         for ( int i = 0; i < rb.length; i++ ) {
