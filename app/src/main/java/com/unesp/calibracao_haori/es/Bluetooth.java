@@ -188,8 +188,9 @@ public class Bluetooth implements AutoCloseable {
                         bufferSaida.get( b );
                         output.write( b );
                         output.flush();
+                        Thread.sleep( 41 );
                     }
-                } catch ( IOException ignored ) {}
+                } catch ( IOException | InterruptedException ignored ) {}
             }
         ).start();
     }
