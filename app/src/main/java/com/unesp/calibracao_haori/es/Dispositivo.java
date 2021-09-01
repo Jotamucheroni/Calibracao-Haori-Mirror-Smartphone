@@ -1,11 +1,8 @@
 package com.unesp.calibracao_haori.es;
 
-import android.opengl.GLES32;
-
 import com.unesp.calibracao_haori.es.camera.Camera;
 import com.unesp.calibracao_haori.opengl.DetectorBorda;
 import com.unesp.calibracao_haori.opengl.Objeto;
-import com.unesp.calibracao_haori.opengl.Renderizador;
 import com.unesp.calibracao_haori.opengl.Textura;
 import com.unesp.calibracao_haori.opengl.framebuffer.FrameBufferObject;
 
@@ -155,8 +152,7 @@ public class Dispositivo implements AutoCloseable {
         
         setObjeto(
             new Objeto(
-                GLES32.GL_TRIANGLES, 2, 2,
-                Renderizador.refQuad, Renderizador.refElementos, textura
+                2, 2, Objeto.getRefQuad(), Objeto.getRefElementos(), textura
             )
         );
     }

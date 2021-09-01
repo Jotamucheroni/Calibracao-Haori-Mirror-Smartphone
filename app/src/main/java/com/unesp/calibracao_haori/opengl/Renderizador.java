@@ -24,17 +24,6 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
         this.atividade = atividade;
     }
     
-    public static final float[]
-        refQuad = {
-            // Coordenadas  Textura
-            -1.0f,  1.0f,   0.0f,   0.0f,
-            -1.0f,  -1.0f,  0.0f,   1.0f,
-            1.0f,   -1.0f,  1.0f,   1.0f,
-            1.0f,   1.0f,   1.0f,   0.0f
-        };
-    
-    public static final int[] refElementos = { 0, 1, 2, 2, 3, 0 };
-    
     private Dispositivo cameraTraseira;
     private Bluetooth bluetooth;
     
@@ -51,7 +40,8 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
         cameraTraseira.alocar();
         atividade.requisitarPermissao( Manifest.permission.CAMERA );
         cameraTraseira.ligar();
-        
+
+        atividade.requisitarPermissao( Manifest.permission.BLUETOOTH );
         bluetooth = new Bluetooth(
             atividade,
             cameraTraseira.getCamera().getTamImg(), cameraTraseira.getCamera().getImagem()

@@ -10,7 +10,25 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 public class Objeto {
-    private final int modoDes;
+    private static final float[]
+        refQuad = {
+        // Coordenadas  Textura
+        -1.0f,  1.0f,   0.0f, 0.0f,
+        -1.0f, -1.0f,   0.0f, 1.0f,
+        1.0f, -1.0f,    1.0f, 1.0f,
+        1.0f,  1.0f,    1.0f, 0.0f
+    };
+    
+    private static final int[] refElementos = { 0, 1, 2, 2, 3, 0 };
+    
+    public static float[] getRefQuad() {
+        return refQuad.clone();
+    }
+    
+    public static int[] getRefElementos() {
+        return refElementos.clone();
+    }
+    
     private final Textura textura;
     private final int numElementos;
     private final int[] vao = new int[1];
@@ -21,25 +39,10 @@ public class Objeto {
         pontMatrizRotX, pontMatrizRotY, pontMatrizRotZ,
         pontMatrizTrans;
     
-    private static final float[] matrizId = {
-        1.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 1.0f
-    };
-    
-    private final float[]
-        matrizEscala = matrizId.clone(),
-        matrizRotX = matrizId.clone(),
-        matrizRotY = matrizId.clone(),
-        matrizRotZ = matrizId.clone(),
-        matrizTrans = matrizId.clone();
-    
     public Objeto(
-        int modoDes, int numCompPos, int numCompCor, int numCompTex,
+        int numCompPos, int numCompCor, int numCompTex,
         @NonNull float[] vertices, @NonNull int[] elementos, Textura textura
     ) {
-        this.modoDes = modoDes;
         this.textura = textura;
         
         int numCompTotal = numCompPos + numCompCor + numCompTex;
@@ -120,54 +123,68 @@ public class Objeto {
     }
     
     public Objeto(
-        int modoDes, int numCompPos, int numCompCor, int numCompTex,
+        int numCompPos, int numCompCor, int numCompTex,
         @NonNull float[] vertices, Textura textura
     ) {
         this(
-            modoDes, numCompPos, numCompCor, numCompTex,
+            numCompPos, numCompCor, numCompTex,
             vertices, getElementos( numCompPos, numCompCor, numCompTex, vertices ), textura
         );
     }
     
     public Objeto(
-        int modoDes, int numCompPos, int numCompCor,
+        int numCompPos, int numCompCor,
         @NonNull float[] vertices, @NonNull int[] elementos
     ) {
         this(
-            modoDes, numCompPos, numCompCor, 0,
+            numCompPos, numCompCor, 0,
             vertices, elementos, null
         );
     }
     
     public Objeto(
-        int modoDes, int numCompPos, int numCompCor,
+        int numCompPos, int numCompCor,
         @NonNull float[] vertices
     ) {
         this(
-            modoDes, numCompPos, numCompCor, 0,
+            numCompPos, numCompCor, 0,
             vertices, getElementos( numCompPos, numCompCor, 0, vertices ), null
         );
     }
     
     public Objeto(
-        int modoDes, int numCompPos, int numCompTex,
+        int numCompPos, int numCompTex,
         @NonNull float[] vertices, @NonNull int[] elementos, Textura textura
     ) {
         this(
-            modoDes, numCompPos, 0, numCompTex,
+            numCompPos, 0, numCompTex,
             vertices, elementos, textura
         );
     }
     
     public Objeto(
-        int modoDes, int numCompPos, int numCompTex,
+        int numCompPos, int numCompTex,
         @NonNull float[] vertices, Textura textura
     ) {
         this(
-            modoDes, numCompPos, 0, numCompTex,
+            numCompPos, 0, numCompTex,
             vertices, getElementos( numCompPos, 0, numCompTex, vertices ), textura
         );
     }
+    
+    private static final float[] matrizId = {
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f
+    };
+    
+    private final float[]
+        matrizEscala = matrizId.clone(),
+        matrizRotX = matrizId.clone(),
+        matrizRotY = matrizId.clone(),
+        matrizRotZ = matrizId.clone(),
+        matrizTrans = matrizId.clone();
     
     public void setEscala( float x, float y, float z ) {
         matrizEscala[0] = x;    //                0                    0           0
@@ -218,9 +235,7 @@ public class Objeto {
         GLES32.glUniformMatrix4fv( pontMatrizTrans, 1, true, matrizTrans, 0 );
         
         GLES32.glBindVertexArray( vao[0] );
-        
-        GLES32.glDrawElements( modoDes, numElementos, GLES32.GL_UNSIGNED_INT, 0 );
-        
+        GLES32.glDrawElements( GLES32.GL_TRIANGLES, numElementos, GLES32.GL_UNSIGNED_INT, 0 );
         GLES32.glBindVertexArray( 0 );
         
         GLES32.glUseProgram( 0 );
