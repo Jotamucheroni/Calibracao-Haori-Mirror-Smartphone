@@ -33,16 +33,19 @@ public class Bluetooth implements AutoCloseable {
     
     private BluetoothServerSocket soqueteServidor;
     
-    private boolean
-        pesquisando = false,
-        servindo = false;
+    private boolean pesquisando, servindo, ligado;
     private final Object
         travaPesquisa = new Object(),
-        travaServidor = new Object();
+        travaServidor = new Object(),
+        travaLigado = new Object();
     
     public Bluetooth(
         MainActivity atividade, int tamanhoBufferSaida, ByteBuffer bufferSaida
     ) {
+        pesquisando = false;
+        servindo = false;
+        ligado = false;
+        
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if ( bluetoothAdapter == null )
             return;
@@ -58,6 +61,11 @@ public class Bluetooth implements AutoCloseable {
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive( Context context, Intent intent ) {
+                synchronized ( travaLigado ) {
+                    if ( !ligado )
+                        return;
+                }
+                
                 synchronized ( travaPesquisa ) {
                     if ( !pesquisando )
                         return;
@@ -91,7 +99,11 @@ public class Bluetooth implements AutoCloseable {
             );
         } catch ( IOException e ) {
             e.printStackTrace();
+            
+            return;
         }
+        
+        ligado = true;
     }
     
     public void setAtividade( MainActivity atividade ) {
@@ -122,6 +134,11 @@ public class Bluetooth implements AutoCloseable {
     }
     
     public void pesquisarDispositivos() {
+        synchronized ( travaLigado ) {
+            if ( !ligado )
+                return;
+        }
+        
         synchronized ( travaPesquisa ) {
             if ( pesquisando )
                 return;
@@ -213,6 +230,11 @@ public class Bluetooth implements AutoCloseable {
     private BluetoothSocket soquete;
     
     public void abrirServidor() {
+        synchronized ( travaLigado ) {
+            if ( !ligado )
+                return;
+        }
+        
         new Thread(
             () -> 
             {
@@ -273,6 +295,13 @@ public class Bluetooth implements AutoCloseable {
     
     @Override
     public void close() {
+        synchronized ( travaLigado ) {
+            if ( !ligado )
+                return;
+            
+            ligado = false;
+        }
+        
         encerrarPesquisa();
         fecharServidor();
         fecharSoquete();
