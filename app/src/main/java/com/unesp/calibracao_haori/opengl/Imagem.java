@@ -8,14 +8,14 @@ import java.nio.ByteOrder;
 public class Imagem extends Textura {
     private Bitmap imagem;
     
-    public Imagem(Bitmap imagem, boolean monocromatica ) {
+    public Imagem( Bitmap imagem, boolean monocromatica ) {
         super();
         
         setImagem( imagem );
         setMonocromatica( monocromatica );
     }
     
-    Imagem( Bitmap imagem ) {
+    public Imagem( Bitmap imagem ) {
         this( imagem, false );
     }
     

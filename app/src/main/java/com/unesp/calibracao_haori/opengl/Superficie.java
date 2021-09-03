@@ -12,11 +12,12 @@ public class Superficie extends GLSurfaceView implements AutoCloseable {
         super( context );
     }
     
-    public Superficie(MainActivity activity ) {
+    public Superficie( MainActivity activity ) {
         super( activity );
         
         setEGLContextClientVersion( 3 );
-        renderizador =  new Renderizador( activity );
+        
+        renderizador = new Renderizador( activity );
         setRenderer( renderizador );
     }
     

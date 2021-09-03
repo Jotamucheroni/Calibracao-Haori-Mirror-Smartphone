@@ -20,21 +20,22 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class CameraLocal extends Camera implements ImageAnalysis.Analyzer {
-    private CameraSelector camera;
+    private CameraSelector cameraSelector;
     private AppCompatActivity atividade;
     private final ListenableFuture<ProcessCameraProvider> listenable;
     private final Executor executorAtividade;
     private final Recurso conexaoCamera;
     
     public CameraLocal(
-        AppCompatActivity atividade, CameraSelector camera, int largImg, int altImg, int numCompCor
+        AppCompatActivity atividade,
+        CameraSelector cameraSelector, int largImg, int altImg, int numCompCor
     ) {
         setAtividade( atividade );
-        setCamera( camera );
+        setCameraSelector( cameraSelector );
         setLargImg( largImg );
         setAltImg( altImg );
         setNumCompCor( numCompCor );
-
+        
         executorAtividade = ContextCompat.getMainExecutor( atividade );
         listenable = ProcessCameraProvider.getInstance( atividade );
         
@@ -42,17 +43,19 @@ public class CameraLocal extends Camera implements ImageAnalysis.Analyzer {
     }
     
     public CameraLocal(
-        AppCompatActivity atividade, CameraSelector camera, int largImg, int altImg
+        AppCompatActivity atividade, CameraSelector cameraSelector, int largImg, int altImg
     ) {
-        this( atividade, camera, largImg, altImg, 3 );
+        this( atividade, cameraSelector, largImg, altImg, 3 );
     }
     
-    public CameraLocal( AppCompatActivity atividade, CameraSelector camera, int numCompCor ) {
-        this( atividade, camera, 640, 480, numCompCor );
+    public CameraLocal(
+        AppCompatActivity atividade, CameraSelector cameraSelector, int numCompCor
+    ) {
+        this( atividade, cameraSelector, 640, 480, numCompCor );
     }
     
-    public CameraLocal( AppCompatActivity atividade, CameraSelector camera ) {
-        this( atividade, camera, 640, 480, 3 );
+    public CameraLocal( AppCompatActivity atividade, CameraSelector cameraSelector ) {
+        this( atividade, cameraSelector, 640, 480, 3 );
     }
     
     public CameraLocal( AppCompatActivity atividade ) {
@@ -63,24 +66,24 @@ public class CameraLocal extends Camera implements ImageAnalysis.Analyzer {
         this.atividade = atividade;
     }
     
-    public void setCamera( CameraSelector camera ) {
-        this.camera = camera;
+    public void setCameraSelector( CameraSelector cameraSelector ) {
+        this.cameraSelector = cameraSelector;
     }
     
-    public CameraSelector getCamera() {
-        return camera;
+    public CameraSelector getCameraSelector() {
+        return cameraSelector;
     }
     
     public AppCompatActivity getAtividade() {
         return atividade;
     }
-
+    
     private ExecutorService cameraExecutor;
     private ImageAnalysis analisador;
     
     @Override
     public void ligar() {
-        if ( ligada | atividade == null | camera == null )
+        if ( ligada | atividade == null | cameraSelector == null )
             return;
         
         setBuffer();
@@ -93,7 +96,7 @@ public class CameraLocal extends Camera implements ImageAnalysis.Analyzer {
         listenable.addListener(
             () -> {
                 try {
-                    listenable.get().bindToLifecycle( atividade, camera, analisador );
+                    listenable.get().bindToLifecycle( atividade, cameraSelector, analisador );
                     conexaoCamera.liberarEspera();
                 } catch ( ExecutionException | InterruptedException e ) {
                     e.printStackTrace();
@@ -111,7 +114,7 @@ public class CameraLocal extends Camera implements ImageAnalysis.Analyzer {
             return;
         
         ligada = false;
-
+        
         listenable.addListener(
             () -> {
                 try {

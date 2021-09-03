@@ -19,7 +19,6 @@ public class FrameBufferObject extends FrameBuffer implements AutoCloseable {
         int[] bufferId = new int[1];
         GLES32.glGenFramebuffers( 1, bufferId, 0 );
         setId( bufferId[0] );
-//        alocar();
         
         int[] drawBuffers = new int[numRenderBuffer];
         for ( int i = 0; i < numRenderBuffer; i++ )
@@ -58,11 +57,14 @@ public class FrameBufferObject extends FrameBuffer implements AutoCloseable {
         bindDraw();
         for ( int i = 0; i < rb.length; i++ ) {
             rb[i] = new RenderBuffer( getLargura(), getAltura() );
+            rb[i].alocar();
             GLES32.glFramebufferRenderbuffer(
                 GLES32.GL_DRAW_FRAMEBUFFER, GLES32.GL_COLOR_ATTACHMENT0 + i,
                 GLES32.GL_RENDERBUFFER, rb[i].getId()
             );
         }
+
+        setAlocado( true );
     }
 
     public void copiar(
@@ -70,6 +72,9 @@ public class FrameBufferObject extends FrameBuffer implements AutoCloseable {
         int x, int y, int largura, int altura,
         int numColunas, int numLinhas
     ) {
+        if ( destino == null || !getAlocado() )
+            return;
+        
         if( x < 0 )
             x = 0;
         
@@ -128,7 +133,7 @@ public class FrameBufferObject extends FrameBuffer implements AutoCloseable {
         int x, int y, int largura, int altura,
         ByteBuffer destino
     ) {
-        if ( destino == null )
+        if ( destino == null || !getAlocado() )
             return;
         
         if ( numero < 1 )

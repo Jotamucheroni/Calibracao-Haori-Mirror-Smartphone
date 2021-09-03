@@ -24,10 +24,11 @@ public class MainActivity extends AppCompatActivity {
         
         glView = new Superficie( this );
         setContentView( glView );
+        
         getWindow().addFlags( WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON );
     }
     
-    private void hideSystemUI() {
+    private void ocultarInterfaceSistema() {
         // Coloca a atividade em modo tela cheia imersivo fixo
         View decorView = getWindow().getDecorView();
         decorView.setSystemUiVisibility(
@@ -45,14 +46,14 @@ public class MainActivity extends AppCompatActivity {
         super.onWindowFocusChanged( hasFocus );
         
         if ( hasFocus )
-            hideSystemUI();
+            ocultarInterfaceSistema();
     }
     
     @Override
     protected void onResume() {
         super.onResume();
         
-        hideSystemUI();
+        ocultarInterfaceSistema();
     }
     
     Recurso permissao = new Recurso();
@@ -112,16 +113,22 @@ public class MainActivity extends AppCompatActivity {
             }
         );
     
+    public void tornarDispositivoVisivel() {
+        discoverableBluetoothLauncher.launch(
+            new Intent( BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE )
+        );
+        
+        bluetooth.esperar();
+    }
+    
     public void tornarDispositivoVisivel( int segundos ) {
         if ( segundos < 0 )
-            discoverableBluetoothLauncher.launch(
-                new Intent( BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE )
-            );
-        else
-            discoverableBluetoothLauncher.launch(
-                new Intent( BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE )
-                    .putExtra( BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, segundos )
-            );
+            segundos = 0;
+        
+        discoverableBluetoothLauncher.launch(
+            new Intent( BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE )
+                .putExtra( BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, segundos )
+        );
         
         bluetooth.esperar();
     }

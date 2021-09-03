@@ -10,7 +10,7 @@ public class Textura implements AutoCloseable {
     private boolean monocromatica;
     private int formatoImagem, formatoInterno;
     
-    public Textura(int largura, int altura, boolean monocromatica ) {
+    public Textura( int largura, int altura, boolean monocromatica ) {
         setLargura( largura );
         setAltura( altura );
         setMonocromatica( monocromatica );
@@ -34,12 +34,8 @@ public class Textura implements AutoCloseable {
         );
     }
     
-    public Textura(int largura, int altura ) {
+    public Textura( int largura, int altura ) {
         this( largura, altura, false );
-    }
-    
-    public Textura(boolean monocromatica ) {
-        this( 1, 1, monocromatica );
     }
     
     public Textura() {
@@ -94,6 +90,10 @@ public class Textura implements AutoCloseable {
         );
         
         alocado = true;
+    }
+    
+    public boolean getAlocado() {
+        return alocado;
     }
     
     public void carregarImagem( ByteBuffer imagem ) {

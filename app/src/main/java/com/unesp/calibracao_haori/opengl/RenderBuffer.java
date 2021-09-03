@@ -6,7 +6,7 @@ public class RenderBuffer implements AutoCloseable {
     public static final int numeroComponentesCor = 4; 
     
     private int largura, altura;
-
+    
     private final int id;
     
     public RenderBuffer( int largura, int altura ) {
@@ -16,8 +16,6 @@ public class RenderBuffer implements AutoCloseable {
         int[] bufferId = new int[1];
         GLES32.glGenRenderbuffers( 1, bufferId, 0 );
         id = bufferId[0];
-        
-        alocar();
     }
     
     public void setLargura( int largura ) {
@@ -54,9 +52,17 @@ public class RenderBuffer implements AutoCloseable {
         return getNumPix() * RenderBuffer.numeroComponentesCor;
     }
     
+    private boolean alocado = false;
+    
     public void alocar() {
         GLES32.glBindRenderbuffer( GLES32.GL_RENDERBUFFER, id );
         GLES32.glRenderbufferStorage( GLES32.GL_RENDERBUFFER, GLES32.GL_RGBA8, largura, altura );
+        
+        alocado = true;
+    }
+    
+    public boolean getAlocado() {
+        return alocado;
     }
     
     @Override

@@ -62,7 +62,7 @@ public abstract class Camera implements AutoCloseable {
         return visBuffer;
     }
     
-    public boolean ligada() {
+    public boolean getLigada() {
         return ligada;
     }
     

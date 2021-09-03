@@ -9,6 +9,8 @@ public abstract class FrameBuffer {
     
     private int id;
     
+    private boolean alocado = false;
+    
     public void setLargura( int largura ) {
         if ( largura < 1 )
             largura = 1;
@@ -30,6 +32,10 @@ public abstract class FrameBuffer {
         this.id = id;
     }
     
+    protected void setAlocado( boolean alocado ) {
+        this.alocado = alocado;
+    }
+    
     public int getLargura() {
         return largura;
     }
@@ -40,6 +46,10 @@ public abstract class FrameBuffer {
     
     public int getId() {
         return id;
+    }
+    
+    public boolean getAlocado() {
+        return alocado;
     }
     
     public void bindDraw() {
@@ -55,11 +65,17 @@ public abstract class FrameBuffer {
     }
     
     public void clear() {
+        if ( !alocado )
+            return;
+        
         bindDraw();
         GLES32.glClear( GLES32.GL_COLOR_BUFFER_BIT );
     }
     
     public void draw( int x, int y, int largura, int altura, Objeto objeto ) {
+        if ( !alocado || objeto == null )
+            return;
+        
         bindDraw();
         GLES32.glViewport( x, y, largura, altura );
         objeto.draw();
@@ -74,9 +90,12 @@ public abstract class FrameBuffer {
     }
     
     public void draw( int x, int y, int largura, int altura, Objeto[] objeto ) {
+        if ( !alocado || objeto == null )
+            return;
+        
         bindDraw();
         GLES32.glViewport( x, y, largura, altura );
-
+        
         for( Objeto obj : objeto )
             obj.draw();
     }

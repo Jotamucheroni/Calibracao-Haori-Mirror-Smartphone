@@ -195,39 +195,6 @@ public class Bluetooth implements AutoCloseable {
         ).start();
     }
     
-    /*private final int numElem = 10;
-    private final int numBytes = numElem * Integer.BYTES;
-    
-    private Thread receberDados( BluetoothSocket socket ) {
-        Thread thread = new Thread(
-            () ->
-            {
-                try {
-                    InputStream input = socket.getInputStream();
-                    
-                    ByteBuffer bb = ByteBuffer.allocateDirect( numBytes );
-                    byte[] b = new byte[numBytes];
-                    while( true ) {
-                        if ( input.read( b ) == -1 )
-                            return;
-                        bb.rewind();
-                        bb.put( b );
-                        bb.rewind();
-                        System.out.print( bb.getInt() );
-                        for ( int i = 1; i < numElem; i++ )
-                            System.out.print( ", " + bb.getInt() );
-                        System.out.println();
-                    }
-                } catch ( IOException e ) {
-                    e.printStackTrace();
-                }
-            }
-        );
-        thread.start();
-        
-        return thread;
-    }*/
-    
     private BluetoothSocket soquete;
     
     public void abrirServidor() {
@@ -259,7 +226,6 @@ public class Bluetooth implements AutoCloseable {
                         
                         this.soquete = soquete;
                         enviarDados( soquete );
-                        /*receberDados( socket );*/
                     }
                 } catch( IOException ignored ) {}
             }

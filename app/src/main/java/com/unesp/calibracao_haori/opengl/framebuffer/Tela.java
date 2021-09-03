@@ -5,6 +5,7 @@ public class Tela extends FrameBuffer {
     
     private Tela() {
         setId( 0 );
+        setAlocado( true );
     }
     
     public static Tela getInstance() {
