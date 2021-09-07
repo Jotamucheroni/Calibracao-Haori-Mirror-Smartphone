@@ -111,6 +111,10 @@ public class Textura implements AutoCloseable {
     public void bind() {
         GLES32.glBindTexture( GLES32.GL_TEXTURE_2D, id );
     }
+
+    public void unbind() {
+        GLES32.glBindTexture( GLES32.GL_TEXTURE_2D, 0 );
+    }
     
     @Override
     public void close() {

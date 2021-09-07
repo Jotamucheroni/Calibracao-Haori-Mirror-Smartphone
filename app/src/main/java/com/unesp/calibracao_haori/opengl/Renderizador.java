@@ -61,7 +61,7 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
     public void onDrawFrame( GL10 unused ) {
         cameraTraseira.atualizarTextura();
         cameraTraseira.draw();
-        cameraTraseira.atualizarImagemDetector( 3 );
+//        cameraTraseira.atualizarImagemDetector( 3 );
         
         tela.clear();
         cameraTraseira.getFrameBufferObject().copiar(

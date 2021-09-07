@@ -2,7 +2,7 @@ package com.unesp.calibracao_haori.es;
 
 import com.unesp.calibracao_haori.es.camera.Camera;
 import com.unesp.calibracao_haori.opengl.DetectorPontos;
-import com.unesp.calibracao_haori.opengl.Objeto;
+import com.unesp.calibracao_haori.opengl.Desenho;
 import com.unesp.calibracao_haori.opengl.Textura;
 import com.unesp.calibracao_haori.opengl.framebuffer.FrameBufferObject;
 
@@ -12,43 +12,43 @@ public class Dispositivo implements AutoCloseable {
     private Camera camera;
     private Textura textura;
     private FrameBufferObject frameBufferObject;
-    private Objeto objeto;
+    private Desenho desenho;
     
     private DetectorPontos detectorPontos;
     
     public Dispositivo(
         String id,
-        Camera camera, Textura textura, FrameBufferObject frameBufferObject, Objeto objeto,
+        Camera camera, Textura textura, FrameBufferObject frameBufferObject, Desenho desenho,
         DetectorPontos detectorPontos
     ) {
         setId( id );
         setCamera( camera );
         setTextura( textura );
         setFrameBufferObject( frameBufferObject );
-        setObjeto( objeto );
+        setDesenho( desenho );
         setDetectorPontos( detectorPontos );
     }
     
     public Dispositivo(
-        Camera camera, Textura textura, FrameBufferObject frameBufferObject, Objeto objeto,
+        Camera camera, Textura textura, FrameBufferObject frameBufferObject, Desenho desenho,
         DetectorPontos detectorPontos
     ) {
-        this( null, camera, textura, frameBufferObject, objeto, detectorPontos);
+        this( null, camera, textura, frameBufferObject, desenho, detectorPontos);
     }
     
     public Dispositivo(
         String id,
-        Camera camera, Textura textura, FrameBufferObject frameBufferObject, Objeto objeto
+        Camera camera, Textura textura, FrameBufferObject frameBufferObject, Desenho desenho
     ) {
-        this( id, camera, textura, frameBufferObject, objeto, null );
+        this( id, camera, textura, frameBufferObject, desenho, null );
         
         setDetectorPontos();
     }
     
     public Dispositivo(
-        Camera camera, Textura textura, FrameBufferObject frameBufferObject, Objeto objeto
+        Camera camera, Textura textura, FrameBufferObject frameBufferObject, Desenho desenho
     ) {
-        this( null, camera, textura, frameBufferObject, objeto );
+        this( null, camera, textura, frameBufferObject, desenho);
     }
     
     public Dispositivo(
@@ -57,7 +57,7 @@ public class Dispositivo implements AutoCloseable {
     ) {
         this( id, camera, textura, frameBufferObject, null, null );
         
-        setObjeto();
+        setDesenho();
         setDetectorPontos();
     }
     
@@ -74,7 +74,7 @@ public class Dispositivo implements AutoCloseable {
         this( id, camera, textura, null, null, null );
         
         setFrameBufferObject();
-        setObjeto();
+        setDesenho();
         setDetectorPontos();
     }
     
@@ -92,7 +92,7 @@ public class Dispositivo implements AutoCloseable {
         
         setTextura();
         setFrameBufferObject();
-        setObjeto();
+        setDesenho();
         setDetectorPontos();
     }
     
@@ -142,22 +142,24 @@ public class Dispositivo implements AutoCloseable {
         setFrameBufferObject( new FrameBufferObject( 3, 640, 480 ) );
     }
     
-    public void setObjeto( Objeto objeto ) {
-        this.objeto = objeto;
+    public void setDesenho( Desenho desenho ) {
+        this.desenho = desenho;
     }
     
-    private void setObjeto() {
+    private void setDesenho() {
         if ( textura == null )
             return;
         
-        setObjeto(
-            new Objeto(
-                2, 2, Objeto.getRefQuad(), Objeto.getRefElementos(), textura
+        setDesenho(
+            new Desenho(
+                2, 2,
+                Desenho.getRefQuad(), Desenho.getRefElementos(),
+                textura
             )
         );
     }
     
-    public void setDetectorPontos(DetectorPontos detectorPontos ) {
+    public void setDetectorPontos( DetectorPontos detectorPontos ) {
         this.detectorPontos = detectorPontos;
     }
     
@@ -188,8 +190,8 @@ public class Dispositivo implements AutoCloseable {
         return frameBufferObject;
     }
     
-    public Objeto getObjeto() {
-        return objeto;
+    public Desenho getDesenho() {
+        return desenho;
     }
     
     public DetectorPontos getDetectorPontos() {
@@ -236,11 +238,11 @@ public class Dispositivo implements AutoCloseable {
     }
     
     public void draw() {
-        if ( frameBufferObject == null || objeto == null )
+        if ( frameBufferObject == null || desenho == null )
             return;
         
         frameBufferObject.clear();
-        frameBufferObject.draw( objeto );
+        frameBufferObject.draw(desenho);
     }
     
     public void atualizarImagemDetector( int numeroRenderBuffer ) {
