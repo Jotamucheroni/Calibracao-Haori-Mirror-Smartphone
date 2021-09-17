@@ -27,6 +27,8 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
     private Dispositivo cameraTraseira;
     private Bluetooth bluetooth;
     
+    private final int NUMERO_PARAMETROS_TEXTURA = 2;
+    
     @Override
     public void onSurfaceCreated( GL10 unused, EGLConfig config ) {
         GLES32.glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
@@ -41,6 +43,10 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
         atividade.requisitarPermissao( Manifest.permission.CAMERA );
         cameraTraseira.ligar();
 
+        Desenho desenho = cameraTraseira.getDesenho();
+        for ( int i = 0; i < NUMERO_PARAMETROS_TEXTURA; i++ )
+            desenho.setParametroTextura( i, 0.1f );
+        
         atividade.requisitarPermissao( Manifest.permission.BLUETOOTH );
         bluetooth = new Bluetooth(
             atividade,

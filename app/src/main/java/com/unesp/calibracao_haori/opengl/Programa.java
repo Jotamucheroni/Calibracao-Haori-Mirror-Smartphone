@@ -85,7 +85,8 @@ public class Programa {
         return codigo.toString();
     }
     
-    private static final int numSaidas = 3;
+    public static final int MAXIMO_PARAMETROS_TEXTURA = 2;
+    public static final int MAXIMO_SAIDAS = 8;
     
     @NonNull
     public static String gerarCodigoFragmentShader(
@@ -101,21 +102,40 @@ public class Programa {
         if ( cor )
             codigo.append( "in vec4 corFrag;\n" );
         
-        if ( textura )
+        if ( textura ) { 
             codigo.append(
                     "in vec2 texFrag;\n"
                 +   "\n"
                 +   "layout(binding = 0) uniform sampler2D imagem;\n"
                 +   "\n"
+                +   "float matrizSobelGx[3][3] = float[3][3](\n"
+                +   "   float[3]( -1.0,  0.0,  1.0 ),\n"
+                +   "   float[3]( -2.0,  0.0,  2.0 ),\n"
+                +   "   float[3]( -1.0,  0.0,  1.0 )\n"
+                +   ");\n"
+                +   "float matrizSobelGy[3][3] = float[3][3](\n"
+                +   "   float[3](  1.0,  2.0,  1.0 ),\n"
+                +   "   float[3](  0.0,  0.0,  0.0 ),\n"
+                +   "   float[3]( -1.0, -2.0, -1.0 )\n"
+                +   ");\n"
+                +   "\n"
             );
+            codigo
+                .append( "uniform float parametroTextura[" )
+                .append( MAXIMO_PARAMETROS_TEXTURA )
+                .append( "];\n" )
+                .append( "\n" );
+        }
+        else
+            codigo.append( "\n" );
         
         codigo
-            .append( "out vec4 saida[" ).append( numSaidas ).append( "];\n" )
+            .append( "out vec4 saida[" ).append( MAXIMO_SAIDAS ).append( "];\n" )
             .append( "\n" )
             .append( "void main() {\n" );
         
         if ( !textura ) {
-            for( int i = numSaidas; i > 0; i-- )
+            for( int i = MAXIMO_SAIDAS; i > 0; i-- )
                 codigo.append( "saida[" ).append( i - 1 ).append( "] = " );
             
             if ( cor )
@@ -141,21 +161,10 @@ public class Programa {
             +   "ivec2 tamanho = textureSize( imagem, 0 );\n"
             +   "vec2 dist = vec2( 1.0 / float( tamanho.x ), 1.0 / float( tamanho.y ) );\n"
             +   "\n"
-            +   "float gx[3][3] = float[3][3](\n"
-            +   "    float[3]( -1.0,  0.0,  1.0 ),\n"
-            +   "    float[3]( -2.0,  0.0,  2.0 ),\n"
-            +   "    float[3]( -1.0,  0.0,  1.0 )\n"
-            +   ");\n"
-            +   "float gy[3][3] = float[3][3](\n"
-            +   "    float[3](  1.0,  2.0,  1.0 ),\n"
-            +   "    float[3](  0.0,  0.0,  0.0 ),\n"
-            +   "    float[3]( -1.0, -2.0, -1.0 )\n"
-            +   ");\n"
-            +   "\n"
             +   "vec4 corTex;\n"
             +   "\n"            
-            +   "vec4 dx = vec4( 0.0 );\n"
-            +   "vec4 dy = vec4( 0.0 );\n"
+            +   "vec4 sobelDx = vec4( 0.0 );\n"
+            +   "vec4 sobelDy = vec4( 0.0 );\n"
             +   "\n"
             +   "int i, j;\n"
             +   "for ( int y = -1; y <= 1; y++ )\n"
@@ -177,15 +186,28 @@ public class Programa {
         
         codigo.append(
                 "\n"
-            +   "        dx += gx[i][j] * corTex;\n"
-            +   "        dy += gy[i][j] * corTex;\n"
+            +   "        sobelDx += matrizSobelGx[i][j] * corTex;\n"
+            +   "        sobelDy += matrizSobelGy[i][j] * corTex;\n"
             +   "    }"
             +   "\n"
-            +   "    vec4 sobel = sqrt( dx * dx + dy * dy );\n"
+            +   "sobelDx = abs( sobelDx ) / 4.0;\n"
+            +   "sobelDy = abs( sobelDy ) / 4.0;\n"
+            +   "\n" 
+            +   "vec4 sobel = sqrt( sobelDx * sobelDx + sobelDy * sobelDy );\n"
+            +   "vec4 anguloSobel = vec4( 0.0 );\n"
+            +   "\n" 
+            +   "if ( sobelDx.r >= sobelDy.r && sobelDx.r != 0.0 )\n"
+            +   "   anguloSobel = vec4( sobelDy.r / sobelDx.r );\n"
+            +   "else if ( sobelDy.r != 0.0 )\n"
+            +   "    anguloSobel = vec4( sobelDx.r / sobelDy.r );\n"
             +   "\n"
-            +   "    saida[0] = pixelCentral;\n"
-            +   "    saida[1] = sobel;\n"
-            +   "    saida[2] = ( sobel.r > 1.5 ) ? vec4( 1.0 ) : vec4( 0.0 );\n"
+            +   "bool condicaoIntensidadeSobel = sobel.r >= parametroTextura[0];\n"
+            +   "bool condicaoAnguloSobel = anguloSobel.r >= parametroTextura[1];\n"
+            +   "\n"
+            +   "saida[0] = pixelCentral;\n"
+            +   "saida[1] = sobel;\n"
+            +   "saida[2] = condicaoIntensidadeSobel && condicaoAnguloSobel\n"
+            +   "   ? vec4( 1.0 ) : vec4( 0.0 );\n"
             +   "}"
         );
         

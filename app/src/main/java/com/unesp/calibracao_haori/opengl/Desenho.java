@@ -38,19 +38,23 @@ public class Desenho implements AutoCloseable {
     public static int[] getRefElementos() {
         return refElementos.clone();
     }
-
+    
     private final int vertexBufferObject;
     private final int elementBufferObject;
-    private final int numElementos;
+    
     private final int vertexArrayObject;
     private final int programa;
-    private Textura textura;
-    private int modoDesenho;
+    private final int numElementos;
     
     private final int
         ponteiroMatrizEscala,
         ponteiroMatrizRotX, ponteiroMatrizRotY, ponteiroMatrizRotZ,
         ponteiroMatrizTrans;
+    
+    private Textura textura;
+    private int ponteiroParametroTextura;
+    
+    private int modoDesenho;
     
     public Desenho(
         int numCompPos, int numCompCor, int numCompTex,
@@ -142,6 +146,10 @@ public class Desenho implements AutoCloseable {
         ponteiroMatrizTrans = GLES32.glGetUniformLocation( programa, "trans" );
         
         setTextura( textura );
+        ponteiroParametroTextura = GLES32.glGetUniformLocation(
+            programa, "parametroTextura" 
+        );
+        
         setModoDesenho( modoDesenho );
     }
     
@@ -349,6 +357,14 @@ public class Desenho implements AutoCloseable {
         this.textura = textura;
     }
     
+    public int getModoDesenho() {
+        return modoDesenho;
+    }
+    
+    public Textura getTextura() {
+        return textura;
+    }
+    
     private static final float[] matrizId = {
         1.0f, 0.0f, 0.0f, 0.0f,
         0.0f, 1.0f, 0.0f, 0.0f,
@@ -370,7 +386,7 @@ public class Desenho implements AutoCloseable {
         //                0                       0                        0       1
     }
     
-    public void setRot( float x, float y, float z ) {
+    public void setRotacao( float x, float y, float z ) {
         double
             sinX = Math.sin( x ), cosX = Math.cos( x ),
             sinY = Math.sin( y ), cosY = Math.cos( y ),
@@ -392,11 +408,51 @@ public class Desenho implements AutoCloseable {
         //                          0                                 0        0    1
     }
     
-    public void setTrans( float x, float y, float z ) {
+    public void setTranslacao( float x, float y, float z ) {
         /*                    1                    0                    0*/   matrizTrans[3] =  x;
         /*                    0                    1                    0*/   matrizTrans[7] =  y;
         /*                    0                    0                    1*/   matrizTrans[11] = z;
         //                    0                    0                    0                       1
+    }
+    
+    public float[] getMatrizEscala() {
+        return matrizEscala.clone();
+    }
+    
+    public float[] getMatrizRotacaoX() {
+        return matrizRotX.clone();
+    }
+    
+    public float[] getMatrizRotacaoY() {
+        return matrizRotY.clone();
+    }
+    
+    public float[] getMatrizRotacaoZ() {
+        return matrizRotZ.clone();
+    }
+    
+    public float[] getMatrizTranslacao() {
+        return matrizTrans.clone();
+    }
+    
+    private final float[] parametroTextura = new float[Programa.MAXIMO_PARAMETROS_TEXTURA];
+    
+    private int getIndiceParametroValido( int indiceOriginal ) {
+        if ( indiceOriginal < 0 )
+            return 0;
+        
+        if ( indiceOriginal >= parametroTextura.length )
+            return parametroTextura.length - 1;
+        
+        return indiceOriginal;
+    }
+    
+    public void setParametroTextura( int indiceParametro, float valor ) {
+        parametroTextura[getIndiceParametroValido( indiceParametro )] = valor;
+    }
+    
+    public float getParametroTextura( int indiceParametro ) {
+        return parametroTextura[getIndiceParametroValido( indiceParametro )];
     }
     
     public void draw() {
@@ -405,18 +461,32 @@ public class Desenho implements AutoCloseable {
         
         GLES32.glUseProgram( programa );
         
-        GLES32.glUniformMatrix4fv( ponteiroMatrizEscala, 1, true, matrizEscala, 0 );
-        GLES32.glUniformMatrix4fv( ponteiroMatrizRotX, 1, true, matrizRotX, 0 );
-        GLES32.glUniformMatrix4fv( ponteiroMatrizRotY, 1, true, matrizRotY, 0 );
-        GLES32.glUniformMatrix4fv( ponteiroMatrizRotZ, 1, true, matrizRotZ, 0 );
-        GLES32.glUniformMatrix4fv( ponteiroMatrizTrans, 1, true, matrizTrans, 0 );
+        GLES32.glUniformMatrix4fv(
+            ponteiroMatrizEscala, 1, true, matrizEscala, 0
+        );
+        GLES32.glUniformMatrix4fv(
+            ponteiroMatrizRotX, 1, true, matrizRotX, 0
+        );
+        GLES32.glUniformMatrix4fv(
+            ponteiroMatrizRotY, 1, true, matrizRotY, 0
+        );
+        GLES32.glUniformMatrix4fv(
+            ponteiroMatrizRotZ, 1, true, matrizRotZ, 0
+        );
+        GLES32.glUniformMatrix4fv(
+            ponteiroMatrizTrans, 1, true, matrizTrans, 0
+        );
         
-        GLES32.glBindVertexArray(  vertexArrayObject );
+        GLES32.glUniform1fv(
+            ponteiroParametroTextura, parametroTextura.length, parametroTextura, 0
+        );
+        
+        GLES32.glBindVertexArray( vertexArrayObject );
         GLES32.glDrawElements( modoDesenho, numElementos, GLES32.GL_UNSIGNED_INT, 0 );
         GLES32.glBindVertexArray( 0 );
         
         GLES32.glUseProgram( 0 );
-
+        
         if ( textura != null )
             textura.unbind();
     }

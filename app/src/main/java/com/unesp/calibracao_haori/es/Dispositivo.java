@@ -3,6 +3,7 @@ package com.unesp.calibracao_haori.es;
 import com.unesp.calibracao_haori.es.camera.Camera;
 import com.unesp.calibracao_haori.opengl.DetectorPontos;
 import com.unesp.calibracao_haori.opengl.Desenho;
+import com.unesp.calibracao_haori.opengl.Programa;
 import com.unesp.calibracao_haori.opengl.Textura;
 import com.unesp.calibracao_haori.opengl.framebuffer.FrameBufferObject;
 
@@ -139,7 +140,9 @@ public class Dispositivo implements AutoCloseable {
     }
     
     private void setFrameBufferObject() {
-        setFrameBufferObject( new FrameBufferObject( 3, 640, 480 ) );
+        setFrameBufferObject(
+            new FrameBufferObject( Programa.MAXIMO_SAIDAS, 640, 480 )
+        );
     }
     
     public void setDesenho( Desenho desenho ) {
@@ -250,10 +253,7 @@ public class Dispositivo implements AutoCloseable {
             return;
         
         if ( detectorPontos.pronto() ) {
-            System.out.println( "Saída [" + id + "]:\t" + detectorPontos.getSaida() );
-            frameBufferObject.lerRenderBuffer(
-                numeroRenderBuffer, detectorPontos.getImagem()
-            );
+            frameBufferObject.lerRenderBuffer( numeroRenderBuffer, detectorPontos.getImagem() );
             detectorPontos.executar();
         }
     }
