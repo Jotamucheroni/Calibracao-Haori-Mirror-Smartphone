@@ -126,10 +126,10 @@ public class Dispositivo implements AutoCloseable {
             return;
         
         Textura inicializadorTextura = new Textura(
-            camera.getLargImg(), camera.getAltImg(), true
+            camera.getLarguraImagem(), camera.getAlturaImagem(), true
         );
         
-        if ( camera.getNumCompCor() > 1 )
+        if ( camera.getNumeroComponentesCorImagem() > 1 )
             inicializadorTextura.setMonocromatica( false );
         
         setTextura( inicializadorTextura );

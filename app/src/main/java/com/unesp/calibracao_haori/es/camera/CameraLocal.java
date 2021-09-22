@@ -20,8 +20,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class CameraLocal extends Camera implements ImageAnalysis.Analyzer {
-    private CameraSelector cameraSelector;
     private AppCompatActivity atividade;
+    private CameraSelector cameraSelector;
     private final ListenableFuture<ProcessCameraProvider> listenable;
     private final Executor executorAtividade;
     private final Recurso conexaoCamera;
@@ -32,9 +32,9 @@ public class CameraLocal extends Camera implements ImageAnalysis.Analyzer {
     ) {
         setAtividade( atividade );
         setCameraSelector( cameraSelector );
-        setLargImg( largImg );
-        setAltImg( altImg );
-        setNumCompCor( numCompCor );
+        setLarguraImagem( largImg );
+        setAlturaImagem( altImg );
+        setNumeroComponentesCorImagem( numCompCor );
         
         executorAtividade = ContextCompat.getMainExecutor( atividade );
         listenable = ProcessCameraProvider.getInstance( atividade );
@@ -74,10 +74,6 @@ public class CameraLocal extends Camera implements ImageAnalysis.Analyzer {
         return cameraSelector;
     }
     
-    public AppCompatActivity getAtividade() {
-        return atividade;
-    }
-    
     private ExecutorService cameraExecutor;
     private ImageAnalysis analisador;
     
@@ -89,7 +85,7 @@ public class CameraLocal extends Camera implements ImageAnalysis.Analyzer {
         setBuffer();
         cameraExecutor = Executors.newSingleThreadExecutor();
         analisador = new ImageAnalysis.Builder()
-            .setTargetResolution( new Size( getLargImg(), getAltImg() ) )
+            .setTargetResolution( new Size( getLarguraImagem(), getAlturaImagem() ) )
             .setBackpressureStrategy( ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST )
             .build();
         analisador.setAnalyzer( cameraExecutor, this );
