@@ -17,134 +17,72 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
 import com.unesp.calibracao_haori.MainActivity;
 
 public class Bluetooth implements AutoCloseable {
+    private final MainActivity atividade;
+    private final ByteBuffer bufferSaida;
+    
     private final BluetoothAdapter bluetoothAdapter;
+    private final TreeSet<BluetoothDevice> remoteDevices;
+    private final BroadcastReceiver receiver;
     
-    private MainActivity atividade;
-    private int tamanhoBufferSaida;
-    private ByteBuffer bufferSaida;
+    private final Object travaPesquisa = new Object();
+    private boolean pesquisando = false;
     
-    private TreeSet<BluetoothDevice> remoteDevices;
-    private BroadcastReceiver receiver;
-    
-    private BluetoothServerSocket soqueteServidor;
-    
-    private boolean pesquisando, servindo, ligado;
-    private final Object
-        travaPesquisa = new Object(),
-        travaServidor = new Object(),
-        travaLigado = new Object();
-    
-    public Bluetooth(
-        MainActivity atividade, int tamanhoBufferSaida, ByteBuffer bufferSaida
-    ) {
-        pesquisando = false;
-        servindo = false;
-        ligado = false;
+    public Bluetooth( MainActivity atividade, ByteBuffer bufferSaida ) {
+        this.atividade = atividade;
+        this.bufferSaida = bufferSaida;
         
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if ( bluetoothAdapter == null )
-            return;
-        
-        setAtividade( atividade );
-        setTamanhoBufferSaida( tamanhoBufferSaida );
-        setBufferSaida( bufferSaida );
-        
-        remoteDevices = new TreeSet<>(
-            Comparator.comparing( BluetoothDevice::getAddress )
-        );
-        
+        remoteDevices = new TreeSet<>( Comparator.comparing( BluetoothDevice::getAddress ) );
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive( Context context, Intent intent ) {
-                synchronized ( travaLigado ) {
-                    if ( !ligado )
-                        return;
-                }
-                
-                synchronized ( travaPesquisa ) {
-                    if ( !pesquisando )
-                        return;
+                if ( BluetoothDevice.ACTION_FOUND.equals( intent.getAction() ) ) {
+                    BluetoothDevice device = intent.getParcelableExtra(
+                        BluetoothDevice.EXTRA_DEVICE
+                    );
                     
-                    if ( BluetoothDevice.ACTION_FOUND.equals( intent.getAction() ) ) {
-                        BluetoothDevice device = intent.getParcelableExtra(
-                            BluetoothDevice.EXTRA_DEVICE
+                    remoteDevices.add( device );
+                    /*if ( remoteDevices.add( device ) ) {
+                        String nome = device.getName();
+                        Log.i(
+                            "Dispositivo bluetooth",
+                            device.getAddress()
+                                +   ": "
+                                +   ( ( nome == null ) ? "Nome indisponível" : nome )
                         );
-                        
-                        if ( remoteDevices.add( device ) ) {
-                            String nome = device.getName();
-                            Log.i(
-                                "Dispositivo bluetooth",
-                                device.getAddress()
-                                    +   ": "
-                                    +   ( ( nome == null ) ? "Nome indisponível" : nome )
-                            );
-                        }
-                    } else if (
-                        BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals( intent.getAction() )
-                    )
-                        bluetoothAdapter.startDiscovery();
-                }
+                    }*/
+                } else if (
+                    BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals( intent.getAction() )
+                )
+                    synchronized ( travaPesquisa ) {
+                        if ( pesquisando )
+                            bluetoothAdapter.startDiscovery();
+                    }
             }
         };
-        
-        try {
-            soqueteServidor = bluetoothAdapter.listenUsingRfcommWithServiceRecord(
-                "Calibração",
-                UUID.fromString( "7427f3ad-d28e-4267-a5b5-f358165eac26" )
-            );
-        } catch ( IOException e ) {
-            e.printStackTrace();
-            
-            return;
-        }
-        
-        ligado = true;
     }
     
-    public void setAtividade( MainActivity atividade ) {
-        this.atividade = atividade;
-        
-        if ( atividade == null )
-            return;
-        
-        if ( !bluetoothAdapter.isEnabled() )
-            atividade.ativarBluetooth();
+    public Bluetooth( MainActivity atividade ) {
+        this( atividade, null );
     }
     
-    public void setTamanhoBufferSaida( int tamanhoBufferSaida ) {
-        if ( tamanhoBufferSaida < 1 )
-            tamanhoBufferSaida = 1;
-        
-        this.tamanhoBufferSaida = tamanhoBufferSaida;
-    }
-    
-    public void setBufferSaida( ByteBuffer bufferSaida ) {
-        if ( bufferSaida == null ) {
-            this.bufferSaida = null;
-            
-            return;
-        }
-        
-        this.bufferSaida = bufferSaida.asReadOnlyBuffer();
+    public ByteBuffer getBufferSaida(){
+        return bufferSaida;
     }
     
     public void pesquisarDispositivos() {
-        synchronized ( travaLigado ) {
-            if ( !ligado )
-                return;
-        }
+        if ( bluetoothAdapter == null || atividade == null )
+            return;
         
         synchronized ( travaPesquisa ) {
             if ( pesquisando )
                 return;
             
-            if ( bluetoothAdapter == null || atividade == null )
-                return;
+            if ( !bluetoothAdapter.isEnabled() )
+                atividade.ativarBluetooth();
             
             atividade.registerReceiver(
                 receiver, new IntentFilter( BluetoothDevice.ACTION_FOUND )
@@ -152,42 +90,59 @@ public class Bluetooth implements AutoCloseable {
             atividade.registerReceiver(
                 receiver, new IntentFilter( BluetoothAdapter.ACTION_DISCOVERY_FINISHED )
             );
-            Log.i( "Bluetooth", "Descoberta de dispositivos iniciada:" );
-            bluetoothAdapter.startDiscovery();
             
+//            Log.i( "Bluetooth", "Descoberta de dispositivos iniciada:" );
+            bluetoothAdapter.startDiscovery();
             pesquisando = true;
         }
     }
     
     public void encerrarPesquisa() {
+        if ( bluetoothAdapter == null || atividade == null )
+            return;
+        
         synchronized ( travaPesquisa ) {
             if ( !pesquisando )
                 return;
             
             pesquisando = false;
-            
-            if ( bluetoothAdapter == null || atividade == null )
-                return;
-            
             bluetoothAdapter.cancelDiscovery();
-            Log.i( "Bluetooth", "Descoberta de dispositivos encerrada." );
             atividade.unregisterReceiver( receiver );
+//            Log.i( "Bluetooth", "Descoberta de dispositivos encerrada." );
         }
     }
     
-    private void enviarDados( @NonNull BluetoothSocket soquete ) {
+    private BluetoothSocket soquete;
+    private final Object travaSoquete = new Object();
+    
+    private void enviarDados() {
+        if ( bufferSaida == null )
+            return;
+        
+        OutputStream saida;
+        synchronized ( travaSoquete ) {
+            if ( soquete == null )
+                return;
+            
+            try {
+                saida = soquete.getOutputStream();
+            } catch ( IOException e ) {
+                e.printStackTrace();
+                
+                return;
+            }
+        }
+        ByteBuffer visBufferSaida = bufferSaida.asReadOnlyBuffer();
+        
         new Thread(
             () -> 
             {
                 try {
-                    OutputStream output = soquete.getOutputStream();
-                    
-                    byte[] b = new byte[tamanhoBufferSaida];
+                    byte[] vetorBytes = new byte[visBufferSaida.capacity()];
                     while( true ) {
-                        bufferSaida.rewind();
-                        bufferSaida.get( b );
-                        output.write( b );
-                        output.flush();
+                        visBufferSaida.rewind();
+                        visBufferSaida.get( vetorBytes );
+                        saida.write( vetorBytes );
                         Thread.sleep( 41 );
                     }
                 } catch ( IOException | InterruptedException ignored ) {}
@@ -195,50 +150,58 @@ public class Bluetooth implements AutoCloseable {
         ).start();
     }
     
-    private BluetoothSocket soquete;
+    private Thread servidor;
+    private BluetoothServerSocket soqueteServidor;
+    private final Object travaSoqueteServidor = new Object();
     
     public void abrirServidor() {
-        synchronized ( travaLigado ) {
-            if ( !ligado )
+        if ( bluetoothAdapter == null || atividade == null )
+            return;
+        
+        if ( servidor != null )
+            if ( servidor.isAlive() )
                 return;
+        
+        synchronized ( travaSoqueteServidor ) {
+            try {
+                soqueteServidor = bluetoothAdapter.listenUsingRfcommWithServiceRecord(
+                    "Calibração",
+                    UUID.fromString( "7427f3ad-d28e-4267-a5b5-f358165eac26" )
+                );
+            } catch ( IOException ignored ) {
+                return;
+            }
         }
         
-        new Thread(
+        servidor = new Thread(
             () -> 
             {
-                synchronized ( travaServidor ) {
-                    if ( servindo )
-                        return;
-                    
-                    atividade.tornarDispositivoVisivel( 30 );
-                    servindo = true;
-                }
+                if ( !bluetoothAdapter.isEnabled() )
+                    atividade.ativarBluetooth();
+                atividade.tornarDispositivoVisivel( 30 );
                 
                 try {
                     BluetoothSocket soquete = soqueteServidor.accept();
-                    
-                    synchronized ( travaServidor ) {
-                        servindo = false;
+                    synchronized ( travaSoqueteServidor ) {
                         soqueteServidor.close();
-                        
-                        if ( this.soquete != null )
-                            this.soquete.close();
-                        
-                        this.soquete = soquete;
-                        enviarDados( soquete );
                     }
+                    
+                    synchronized ( travaSoquete ) {
+                        fecharSoquete();
+                        this.soquete = soquete;
+                    }
+                    enviarDados();
                 } catch( IOException ignored ) {}
             }
-        ).start();
+        );
+        servidor.start();
     }
     
     public void fecharServidor() {
-        synchronized ( travaServidor ) {
-            if ( !servindo )
+        synchronized ( travaSoqueteServidor ) {
+            if ( soqueteServidor == null )
                 return;
-
-            servindo = false;
-
+            
             try {
                 soqueteServidor.close();
             } catch ( IOException e ) {
@@ -248,10 +211,10 @@ public class Bluetooth implements AutoCloseable {
     }
     
     public void fecharSoquete() {
-        synchronized ( travaServidor ) {
+        synchronized ( travaSoquete ) {
             if ( soquete == null )
                 return;
-
+            
             try {
                 soquete.close();
             } catch ( IOException e ) {
@@ -262,15 +225,8 @@ public class Bluetooth implements AutoCloseable {
     
     @Override
     public void close() {
-        synchronized ( travaLigado ) {
-            if ( !ligado )
-                return;
-            
-            ligado = false;
-        }
-        
         encerrarPesquisa();
-        fecharServidor();
         fecharSoquete();
+        fecharServidor();
     }
 }

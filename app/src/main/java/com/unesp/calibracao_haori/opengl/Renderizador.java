@@ -33,6 +33,7 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
     public void onSurfaceCreated( GL10 unused, EGLConfig config ) {
         GLES32.glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
         
+        atividade.requisitarPermissao( Manifest.permission.CAMERA );
         cameraTraseira = new Dispositivo(
             "Câmera traseira",
             new CameraLocal(
@@ -40,18 +41,14 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
             )
         );
         cameraTraseira.alocar();
-        atividade.requisitarPermissao( Manifest.permission.CAMERA );
         cameraTraseira.ligar();
-
+        
         Desenho desenho = cameraTraseira.getDesenho();
         for ( int i = 0; i < NUMERO_PARAMETROS_TEXTURA; i++ )
             desenho.setParametroTextura( i, 0.1f );
         
         atividade.requisitarPermissao( Manifest.permission.BLUETOOTH );
-        bluetooth = new Bluetooth(
-            atividade,
-            cameraTraseira.getCamera().getTamImg(), cameraTraseira.getCamera().getImagem()
-        );
+        bluetooth = new Bluetooth( atividade, cameraTraseira.getCamera().getImagem() );
         bluetooth.abrirServidor();
     }
     
