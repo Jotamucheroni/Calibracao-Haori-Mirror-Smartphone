@@ -5,25 +5,9 @@ import android.opengl.GLES32;
 import com.unesp.calibracao_haori.opengl.Desenho;
 
 public abstract class FrameBuffer {
-    private int largura, altura;
-    
-    private int id;
-    
-    private boolean alocado = false;
-    
-    public void setLargura( int largura ) {
-        if ( largura < 1 )
-            largura = 1;
-        
-        this.largura = largura;
-    }
-    
-    public void setAltura( int altura ) {
-        if ( altura < 1 )
-            altura = 1;
-        
-        this.altura = altura;
-    }
+    private int
+        id,
+        largura, altura;
     
     protected void setId( int id ) {
         if ( id < 0 )
@@ -32,8 +16,22 @@ public abstract class FrameBuffer {
         this.id = id;
     }
     
-    protected void setAlocado( boolean alocado ) {
-        this.alocado = alocado;
+    protected void setLargura( int largura ) {
+        if ( largura < 1 )
+            largura = 1;
+        
+        this.largura = largura;
+    }
+    
+    protected void setAltura( int altura ) {
+        if ( altura < 1 )
+            altura = 1;
+        
+        this.altura = altura;
+    }
+    
+    public int getId() {
+        return id;
     }
     
     public int getLargura() {
@@ -44,12 +42,8 @@ public abstract class FrameBuffer {
         return altura;
     }
     
-    public int getId() {
-        return id;
-    }
-    
-    public boolean getAlocado() {
-        return alocado;
+    public int getNumeroPixeis() {
+        return largura * altura;
     }
     
     public void bindDraw() {
@@ -64,47 +58,59 @@ public abstract class FrameBuffer {
         GLES32.glBindFramebuffer( GLES32.GL_FRAMEBUFFER, id );
     }
     
-    public void clear() {
-        if ( !alocado )
-            return;
-        
-        bindDraw();
-        GLES32.glClear( GLES32.GL_COLOR_BUFFER_BIT );
+    public void unbindDraw() {
+        GLES32.glBindFramebuffer( GLES32.GL_DRAW_FRAMEBUFFER, 0 );
     }
     
-    public void draw( int x, int y, int largura, int altura, Desenho desenho) {
-        if ( !alocado || desenho == null )
+    public void unbindRead() {
+        GLES32.glBindFramebuffer( GLES32.GL_READ_FRAMEBUFFER, 0 );
+    }
+    
+    public void unbind() {
+        GLES32.glBindFramebuffer( GLES32.GL_FRAMEBUFFER, 0 );
+    }
+    
+    public void clear() {
+        bindDraw();
+        GLES32.glClear( GLES32.GL_COLOR_BUFFER_BIT );
+        unbindDraw();
+    }
+    
+    public void draw( int x, int y, int largura, int altura, Desenho desenho ) {
+        if ( desenho == null )
             return;
         
         bindDraw();
         GLES32.glViewport( x, y, largura, altura );
         desenho.draw();
+        unbindDraw();
     }
     
-    public void draw( int largura, int altura, Desenho desenho) {
-        draw( 0, 0, largura, altura, desenho);
+    public void draw( int largura, int altura, Desenho desenho ) {
+        draw( 0, 0, largura, altura, desenho );
     }
     
-    public void draw( Desenho desenho) {
-        draw( 0, 0, this.largura, this.altura, desenho);
+    public void draw( Desenho desenho ) {
+        draw( 0, 0, this.largura, this.altura, desenho );
     }
     
-    public void draw( int x, int y, int largura, int altura, Desenho[] desenho) {
-        if ( !alocado || desenho == null )
+    public void draw( int x, int y, int largura, int altura, Desenho[] desenho ) {
+        if ( desenho == null )
             return;
         
         bindDraw();
         GLES32.glViewport( x, y, largura, altura );
         
-        for( Desenho des : desenho)
+        for( Desenho des : desenho )
             des.draw();
+        unbindDraw();
     }
     
-    public void draw( int largura, int altura, Desenho[] desenho) {
-        draw( 0, 0, largura, altura, desenho);
+    public void draw( int largura, int altura, Desenho[] desenho ) {
+        draw( 0, 0, largura, altura, desenho );
     }
     
-    public void draw( Desenho[] desenho) {
-        draw( 0, 0, this.largura, this.altura, desenho);
+    public void draw( Desenho[] desenho ) {
+        draw( 0, 0, this.largura, this.altura, desenho );
     }
 }

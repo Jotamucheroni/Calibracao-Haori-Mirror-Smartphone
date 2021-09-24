@@ -7,72 +7,81 @@ import com.unesp.calibracao_haori.opengl.RenderBuffer;
 import java.nio.ByteBuffer;
 
 public class FrameBufferObject extends FrameBuffer implements AutoCloseable {
-    public static final int numeroComponentesCor = RenderBuffer.numeroComponentesCor;
+    private final int
+        numeroRenderBuffer,
+        numeroComponentesCor;
     
-    private int numRenderBuffer;
+    private final RenderBuffer[] renderBuffer;
     
-    public FrameBufferObject( int numRenderBuffer, int largura, int altura ) {
-        setNumRenderBuffer( numRenderBuffer );
-        setLargura( largura );
-        setAltura( altura );
-        
+    public FrameBufferObject(
+        int numeroRenderBuffer, int largura, int altura, int numeroComponentesCor
+    ) {
         int[] bufferId = new int[1];
         GLES32.glGenFramebuffers( 1, bufferId, 0 );
         setId( bufferId[0] );
         
-        int[] drawBuffers = new int[numRenderBuffer];
-        for ( int i = 0; i < numRenderBuffer; i++ )
+        if ( numeroRenderBuffer < 1 )
+            numeroRenderBuffer = 1;
+        this.numeroRenderBuffer = numeroRenderBuffer;
+        
+        int[] drawBuffers = new int[this.numeroRenderBuffer];
+        for ( int i = 0; i < this.numeroRenderBuffer; i++ )
             drawBuffers[i] = GLES32.GL_COLOR_ATTACHMENT0 + i;
         bindDraw();
-        GLES32.glDrawBuffers( numRenderBuffer, drawBuffers, 0 );
+        GLES32.glDrawBuffers( numeroRenderBuffer, drawBuffers, 0 );
+        
+        setLargura( largura );
+        setAltura( altura );
+        
+        if ( numeroComponentesCor < 1 )
+            numeroComponentesCor = 1;
+        else if ( numeroComponentesCor > 4 )
+            numeroComponentesCor = 4;
+        this.numeroComponentesCor = numeroComponentesCor;
+        
+        renderBuffer = new RenderBuffer[getNumeroRenderBuffer()];
+        int
+            larguraFinal = getLargura(),
+            alturaFinal = getAltura();
+        
+        for ( int i = 0; i < renderBuffer.length; i++ ) {
+            renderBuffer[i] = new RenderBuffer(
+                larguraFinal, alturaFinal, this.numeroComponentesCor
+            );
+            GLES32.glFramebufferRenderbuffer(
+                GLES32.GL_DRAW_FRAMEBUFFER, GLES32.GL_COLOR_ATTACHMENT0 + i,
+                GLES32.GL_RENDERBUFFER, renderBuffer[i].getId()
+            );
+        }
+        unbindDraw();
+    }
+    
+    public FrameBufferObject( int numeroRenderBuffer, int largura, int altura ) {
+        this( numeroRenderBuffer, largura, altura, 4 );
     }
     
     public FrameBufferObject( int largura, int altura ) {
-        this( 1, largura, altura );
+        this( 1, largura, altura, 4 );
     }
     
-    public void setNumRenderBuffer( int numRenderBuffer ) {
-        if ( numRenderBuffer < 1 )
-            numRenderBuffer = 1;
-        
-        this.numRenderBuffer = numRenderBuffer;
+    public int getNumeroRenderBuffer() {
+        return numeroRenderBuffer;
     }
     
-    public int getNumRenderBuffer() {
-        return numRenderBuffer;
+    public int getNumeroComponentesCor() {
+        return numeroComponentesCor;
     }
     
-    public int getNumPix() {
-        return getLargura() * getAltura();
+    public int getNumeroBytes() {
+        return getNumeroPixeis() * numeroComponentesCor;
     }
     
-    public int getNumBytes() {
-        return getNumPix() * FrameBufferObject.numeroComponentesCor;
-    }
-    
-    private RenderBuffer[] rb;
-    
-    public void alocar() {
-        rb = new RenderBuffer[getNumRenderBuffer()];
-        bindDraw();
-        for ( int i = 0; i < rb.length; i++ ) {
-            rb[i] = new RenderBuffer( getLargura(), getAltura() );
-            rb[i].alocar();
-            GLES32.glFramebufferRenderbuffer(
-                GLES32.GL_DRAW_FRAMEBUFFER, GLES32.GL_COLOR_ATTACHMENT0 + i,
-                GLES32.GL_RENDERBUFFER, rb[i].getId()
-            );
-        }
-
-        setAlocado( true );
-    }
-
     public void copiar(
         FrameBuffer destino,
         int x, int y, int largura, int altura,
         int numColunas, int numLinhas
     ) {
-        if ( destino == null || !getAlocado() )
+        if ( destino == null )
             return;
         
         if( x < 0 )
@@ -111,6 +120,8 @@ public class FrameBufferObject extends FrameBuffer implements AutoCloseable {
                 GLES32.GL_COLOR_BUFFER_BIT, GLES32.GL_LINEAR
             );
         }
+        destino.unbindDraw();
+        unbindRead();
     }
     
     public void copiar(
@@ -133,13 +144,13 @@ public class FrameBufferObject extends FrameBuffer implements AutoCloseable {
         int x, int y, int largura, int altura,
         ByteBuffer destino
     ) {
-        if ( destino == null || !getAlocado() )
+        if ( destino == null )
             return;
         
         if ( numero < 1 )
             numero = 1;
-        else if ( numero > numRenderBuffer )
-            numero = numRenderBuffer;
+        else if ( numero > numeroRenderBuffer )
+            numero = numeroRenderBuffer;
         
         bindRead();
         GLES32.glReadBuffer( GLES32.GL_COLOR_ATTACHMENT0 + ( numero - 1 ) );
@@ -148,13 +159,6 @@ public class FrameBufferObject extends FrameBuffer implements AutoCloseable {
             GLES32.GL_RGBA, GLES32.GL_UNSIGNED_BYTE,
             destino
         );
-    }
-
-    public void lerRenderBuffer(
-        int x, int y, int largura, int altura,
-        ByteBuffer destino
-    ) {
-        lerRenderBuffer( 1, 0, 0, largura, altura, destino );
     }
     
     public void lerRenderBuffer(
@@ -166,33 +170,16 @@ public class FrameBufferObject extends FrameBuffer implements AutoCloseable {
     }
     
     public void lerRenderBuffer(
-            int largura, int altura,
-            ByteBuffer destino
-    ) {
-        lerRenderBuffer( 1, 0, 0, largura, altura, destino );
-    }
-    
-    public void lerRenderBuffer(
         int numero,
         ByteBuffer destino
     ) {
-        lerRenderBuffer(
-            numero, 0, 0, getLargura(), getAltura(), destino
-        );
-    }
-    
-    public void lerRenderBuffer(
-        ByteBuffer destino
-    ) {
-        lerRenderBuffer(
-            1, 0, 0, getLargura(), getAltura(), destino
-        );
+        lerRenderBuffer( numero, 0, 0, getLargura(), getAltura(), destino );
     }
     
     @Override
     public void close() {
-        for ( RenderBuffer r : rb )
-            r.close();
+        for ( RenderBuffer rb : renderBuffer )
+            rb.close();
         GLES32.glDeleteFramebuffers( 1, new int[]{ getId() }, 0 );
     }
 }
