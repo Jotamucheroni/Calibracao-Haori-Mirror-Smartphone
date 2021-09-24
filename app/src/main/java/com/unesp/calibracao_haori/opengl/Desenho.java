@@ -39,22 +39,22 @@ public class Desenho implements AutoCloseable {
         return refElementos.clone();
     }
     
-    private final int vertexBufferObject;
-    private final int elementBufferObject;
+    private final int
+        vertexBufferObject, elementBufferObject,
+        vertexArrayObject,
+        numElementos;
     
-    private final int vertexArrayObject;
-    private final int programa;
-    private final int numElementos;
+    private final Programa programa;
     
     private final int
         ponteiroMatrizEscala,
         ponteiroMatrizRotX, ponteiroMatrizRotY, ponteiroMatrizRotZ,
         ponteiroMatrizTrans;
     
-    private Textura textura;
-    private int ponteiroParametroTextura;
+    private final Textura textura;
+    private final int ponteiroParametroTextura;
     
-    private int modoDesenho;
+    private final int modoDesenho;
     
     public Desenho(
         int numCompPos, int numCompCor, int numCompTex,
@@ -72,85 +72,94 @@ public class Desenho implements AutoCloseable {
             vertexArrayObject = leitorId[0];
         }
         
-        programa = Programa.gerarPrograma(
+        programa = new Programa(
             numCompCor > 0,
             numCompTex > 0,
-            textura != null && textura.getMonocromatica()
+            textura != null && textura.getNumeroComponentesCor() == 1
         );
         
         GLES32.glBindVertexArray( vertexArrayObject );
-        
-        GLES32.glBindBuffer( GLES32.GL_ARRAY_BUFFER, vertexBufferObject );
-        
-        {
-            final int tamanhoTotalVertices = vertices.length * Float.BYTES;
             
-            GLES32.glBufferData(
-                GLES32.GL_ARRAY_BUFFER, tamanhoTotalVertices,
-                ByteBuffer
-                    .allocateDirect( tamanhoTotalVertices )
-                    .order( ByteOrder.nativeOrder() )
-                    .asFloatBuffer()
-                    .put( vertices )
-                    .position( 0 ),
-                GLES32.GL_STATIC_DRAW
-            );
-        }
-        
-        {
-            final int[] ponteiroVertice = new int[]{
-                GLES32.glGetAttribLocation( programa, "pos" ),
-                GLES32.glGetAttribLocation( programa, "cor" ),
-                GLES32.glGetAttribLocation( programa, "tex" )
-            };
-            final int[] numComp = new int[] { numCompPos, numCompCor, numCompTex };
-            final int tamanhoVertice = ( numCompPos + numCompCor + numCompTex ) * Float.BYTES;
-            int deslocamento = 0;
+            GLES32.glBindBuffer( GLES32.GL_ARRAY_BUFFER, vertexBufferObject );
             
-            for ( int i = 0; i < ponteiroVertice.length; i++ ) {
-                GLES32.glEnableVertexAttribArray( ponteiroVertice[i] );
-                GLES32.glVertexAttribPointer(
-                    ponteiroVertice[i], numComp[i], GLES32.GL_FLOAT, false,
-                    tamanhoVertice, deslocamento
+            {
+                final int tamanhoTotalVertices = vertices.length * Float.BYTES;
+                
+                GLES32.glBufferData(
+                    GLES32.GL_ARRAY_BUFFER, tamanhoTotalVertices,
+                    ByteBuffer
+                        .allocateDirect( tamanhoTotalVertices )
+                        .order( ByteOrder.nativeOrder() )
+                        .asFloatBuffer()
+                        .put( vertices )
+                        .position( 0 ),
+                    GLES32.GL_STATIC_DRAW
                 );
-                deslocamento += numComp[i] * Float.BYTES;
             }
-        }
-        
-        numElementos = elementos.length;
-        GLES32.glBindBuffer( GLES32.GL_ELEMENT_ARRAY_BUFFER, elementBufferObject );
-        
-        {
-            final int tamanhoElementos = numElementos * Integer.BYTES;
             
-            GLES32.glBufferData(
-                GLES32.GL_ELEMENT_ARRAY_BUFFER, tamanhoElementos,
-                ByteBuffer
-                    .allocateDirect( tamanhoElementos )
-                    .order( ByteOrder.nativeOrder() )
-                    .asIntBuffer()
-                    .put( elementos )
-                    .position( 0 ),
-                GLES32.GL_STATIC_DRAW
-            );
-        }
+            {
+                final int[] ponteiroVertice = new int[]{
+                    programa.getAttribLocation( "pos" ),
+                    programa.getAttribLocation( "cor" ),
+                    programa.getAttribLocation( "tex" )
+                };
+                final int[] numComp = new int[] { numCompPos, numCompCor, numCompTex };
+                final int tamanhoVertice = ( numCompPos + numCompCor + numCompTex ) * Float.BYTES;
+                int deslocamento = 0;
+                
+                for ( int i = 0; i < ponteiroVertice.length; i++ ) {
+                    GLES32.glEnableVertexAttribArray( ponteiroVertice[i] );
+                    GLES32.glVertexAttribPointer(
+                        ponteiroVertice[i], numComp[i], GLES32.GL_FLOAT, false,
+                        tamanhoVertice, deslocamento
+                    );
+                    deslocamento += numComp[i] * Float.BYTES;
+                }
+            }
+            
+            numElementos = elementos.length;
+            GLES32.glBindBuffer( GLES32.GL_ELEMENT_ARRAY_BUFFER, elementBufferObject );
+            
+            {
+                final int tamanhoElementos = numElementos * Integer.BYTES;
+                
+                GLES32.glBufferData(
+                    GLES32.GL_ELEMENT_ARRAY_BUFFER, tamanhoElementos,
+                    ByteBuffer
+                        .allocateDirect( tamanhoElementos )
+                        .order( ByteOrder.nativeOrder() )
+                        .asIntBuffer()
+                        .put( elementos )
+                        .position( 0 ),
+                    GLES32.GL_STATIC_DRAW
+                );
+            }
         
         GLES32.glBindVertexArray( 0 );
         GLES32.glBindBuffer( GLES32.GL_ELEMENT_ARRAY_BUFFER, 0 );
         GLES32.glBindBuffer( GLES32.GL_ARRAY_BUFFER, 0 );
         
-        ponteiroMatrizEscala = GLES32.glGetUniformLocation( programa, "escala" );
-        ponteiroMatrizRotX = GLES32.glGetUniformLocation( programa, "rotX" );
-        ponteiroMatrizRotY = GLES32.glGetUniformLocation( programa, "rotY" );
-        ponteiroMatrizRotZ = GLES32.glGetUniformLocation( programa, "rotZ" );
-        ponteiroMatrizTrans = GLES32.glGetUniformLocation( programa, "trans" );
+        ponteiroMatrizEscala = programa.getUniformLocation( "escala" );
+        ponteiroMatrizRotX = programa.getUniformLocation( "rotX" );
+        ponteiroMatrizRotY = programa.getUniformLocation( "rotY" );
+        ponteiroMatrizRotZ = programa.getUniformLocation( "rotZ" );
+        ponteiroMatrizTrans = programa.getUniformLocation( "trans" );
         
-        setTextura( textura );
-        ponteiroParametroTextura = GLES32.glGetUniformLocation(
-            programa, "parametroTextura" 
-        );
+        this.textura = textura;
+        ponteiroParametroTextura = programa.getUniformLocation( "parametroTextura" );
         
-        setModoDesenho( modoDesenho );
+        boolean modoDesenhoValido = false;
+        
+        for( int modo : vetorModoDesenho )
+            if( modo == modoDesenho ) {
+                modoDesenhoValido = true;
+                break;
+            }
+        
+        if ( modoDesenhoValido )
+            this.modoDesenho = modoDesenho;
+        else
+            this.modoDesenho = PADRAO;
     }
     
     public Desenho(
@@ -326,8 +335,8 @@ public class Desenho implements AutoCloseable {
     }
     
     private static int[] getElementos(
-            int numCompPos, int numCompCor, int numCompTex,
-            @NonNull float[] vertices
+        int numCompPos, int numCompCor, int numCompTex,
+        @NonNull float[] vertices
     ) {
         int numVertices = vertices.length / ( numCompPos + numCompCor + numCompTex );
         int[] elementos = new int[numVertices];
@@ -338,32 +347,38 @@ public class Desenho implements AutoCloseable {
         return elementos;
     }
     
-    public void setModoDesenho( int modoDesenho ) {
-        boolean modoDesenhoValido = false;
+    private static final int NUMERO_COORDENDAS = 3;
+    
+    public static final int
+        X = 0,
+        Y = 1,
+        Z = 2;
+    
+    private static float[] getXYZ( float[] xyz ) {
+        final float[] xyzFinal = new float[]{ 0.0f, 0.0f, 0.0f };
         
-        for( int modo : vetorModoDesenho )
-            if( modo == modoDesenho ) {
-                modoDesenhoValido = true;
-                break;
-            }
+        if ( xyz == null )
+            return xyzFinal;
         
-        if ( modoDesenhoValido )
-            this.modoDesenho = modoDesenho;
-        else
-            this.modoDesenho = PADRAO;
+        for ( int i = 0; i < xyz.length && i < xyzFinal.length; i++ )
+            xyzFinal[i] = xyz[i];
+        
+        return xyzFinal;
     }
     
-    public void setTextura( Textura textura ) {
-        this.textura = textura;
+    private int getCoordenadaValida( int coord ) {
+        if ( coord < X )
+            coord = X;
+        else if ( coord > Z )
+            coord = Z;
+        
+        return coord;
     }
     
-    public int getModoDesenho() {
-        return modoDesenho;
-    }
-    
-    public Textura getTextura() {
-        return textura;
-    }
+    private final float[]
+        vetorEscala = new float[NUMERO_COORDENDAS],
+        vetorRotacao = new float[NUMERO_COORDENDAS],
+        vetorTranslacao = new float[NUMERO_COORDENDAS];
     
     private static final float[] matrizId = {
         1.0f, 0.0f, 0.0f, 0.0f,
@@ -380,13 +395,29 @@ public class Desenho implements AutoCloseable {
         matrizTrans = matrizId.clone();
     
     public void setEscala( float x, float y, float z ) {
+        vetorEscala[0] = x;
+        vetorEscala[1] = y;
+        vetorEscala[2] = z;
+        
         matrizEscala[0] = x;    //                0                    0           0
         /*                0*/   matrizEscala[5] = y;    //             0           0
         /*                0                       0*/   matrizEscala[10] = z;   // 0
         //                0                       0                        0       1
     }
     
+    public void setEscala( float[] xyz ) {
+        if ( xyz == null )
+            return;
+        
+        xyz = getXYZ( xyz );
+        setEscala( xyz[0], xyz[1], xyz[2] );
+    }
+    
     public void setRotacao( float x, float y, float z ) {
+        vetorRotacao[0] = x;
+        vetorRotacao[1] = y;
+        vetorRotacao[2] = z;
+        
         double
             sinX = Math.sin( x ), cosX = Math.cos( x ),
             sinY = Math.sin( y ), cosY = Math.cos( y ),
@@ -408,11 +439,55 @@ public class Desenho implements AutoCloseable {
         //                          0                                 0        0    1
     }
     
+    public void setRotacao( float[] xyz ) {
+        if ( xyz == null )
+            return;
+        
+        xyz = getXYZ( xyz );
+        setRotacao( xyz[0], xyz[1], xyz[2] );
+    }
+    
     public void setTranslacao( float x, float y, float z ) {
+        vetorTranslacao[0] = x;
+        vetorTranslacao[1] = y;
+        vetorTranslacao[2] = z;
+        
         /*                    1                    0                    0*/   matrizTrans[3] =  x;
         /*                    0                    1                    0*/   matrizTrans[7] =  y;
         /*                    0                    0                    1*/   matrizTrans[11] = z;
         //                    0                    0                    0                       1
+    }
+    
+    public void setTranslacao( float[] xyz ) {
+        if ( xyz == null )
+            return;
+        
+        xyz = getXYZ( xyz );
+        setTranslacao( xyz[0], xyz[1], xyz[2] );
+    }
+    
+    public float getEscala( int coord ) {
+        return vetorEscala[getCoordenadaValida( coord )];
+    }
+    
+    public float getRotacao( int coord ) {
+        return vetorRotacao[getCoordenadaValida( coord )];
+    }
+    
+    public float getTranslacao( int coord ) {
+        return vetorTranslacao[getCoordenadaValida( coord )];
+    }
+    
+    public float[] getVetorEscala() {
+        return vetorEscala.clone();
+    }
+    
+    public float[] getVetorRotacao() {
+        return vetorRotacao.clone();
+    }
+    
+    public float[] getVetorTranslacao() {
+        return vetorTranslacao.clone();
     }
     
     public float[] getMatrizEscala() {
@@ -448,7 +523,10 @@ public class Desenho implements AutoCloseable {
     }
     
     public void setParametroTextura( int indiceParametro, float valor ) {
-        parametroTextura[getIndiceParametroValido( indiceParametro )] = valor;
+        if ( indiceParametro < 0 || indiceParametro >= parametroTextura.length )
+            return;
+        
+        parametroTextura[indiceParametro] = valor;
     }
     
     public float getParametroTextura( int indiceParametro ) {
@@ -459,7 +537,7 @@ public class Desenho implements AutoCloseable {
         if ( textura != null )
             textura.bind();
         
-        GLES32.glUseProgram( programa );
+        programa.ativar();
         
         GLES32.glUniformMatrix4fv(
             ponteiroMatrizEscala, 1, true, matrizEscala, 0
@@ -485,7 +563,7 @@ public class Desenho implements AutoCloseable {
         GLES32.glDrawElements( modoDesenho, numElementos, GLES32.GL_UNSIGNED_INT, 0 );
         GLES32.glBindVertexArray( 0 );
         
-        GLES32.glUseProgram( 0 );
+        programa.desativar();
         
         if ( textura != null )
             textura.unbind();
@@ -493,6 +571,7 @@ public class Desenho implements AutoCloseable {
     
     @Override
     public void close(){
+        programa.close();
         GLES32.glDeleteVertexArrays( 1, new int[]{ vertexArrayObject }, 0 );
         GLES32.glDeleteBuffers( 2, new int[]{ elementBufferObject, vertexBufferObject }, 0 );
     }

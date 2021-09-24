@@ -4,47 +4,37 @@ import android.opengl.GLES32;
 
 import androidx.annotation.NonNull;
 
-public class Programa {
-    public static int loadShader( int type, String shaderCode ) {
-        int shader = GLES32.glCreateShader( type );
+public class Programa implements AutoCloseable {
+    private final int id;
+    
+    public Programa( boolean cor, boolean textura, boolean texturaMonocromatica ) {
+        id = GLES32.glCreateProgram();
         
-        GLES32.glShaderSource( shader, shaderCode );
-        GLES32.glCompileShader( shader );
-        int[] compilado = new int[1];
-        GLES32.glGetShaderiv( shader, GLES32.GL_COMPILE_STATUS, compilado, 0 );
+        int vertexShader = compilarShader(
+                GLES32.GL_VERTEX_SHADER, gerarCodigoVertexShader( cor, textura )
+        );
+        int fragmentShader = compilarShader(
+                GLES32.GL_FRAGMENT_SHADER, gerarCodigoFragmentShader( cor, textura, texturaMonocromatica )
+        );
         
-        // Verifica se houve erro de compilação
-        if ( compilado[0] == 0 ) {
-            System.out.println( "Um programa não pôde ser compilado:\n" + "Código fonte:" );
-            
-            int i = 1;
-            for( String linha: shaderCode.split( "\n" ) ) {
-                System.out.println( i + "\t" + linha );
-                i++;
-            }
-        }
-        
-        return shader;
+        GLES32.glAttachShader( id, vertexShader );
+        GLES32.glAttachShader( id, fragmentShader );
+        GLES32.glLinkProgram( id );
     }
     
-    public static int gerarPrograma(
-        @NonNull String vertexShaderCode,
-        @NonNull String fragmentShaderCode
-    ) {
-        int program = GLES32.glCreateProgram();
-        
-        int vertexShader = loadShader( GLES32.GL_VERTEX_SHADER, vertexShaderCode );
-        int fragmentShader = loadShader( GLES32.GL_FRAGMENT_SHADER, fragmentShaderCode );
-        
-        GLES32.glAttachShader( program, vertexShader );
-        GLES32.glAttachShader( program, fragmentShader );
-        GLES32.glLinkProgram( program );
-        
-        return program;
+    public Programa( boolean cor, boolean textura ) {
+        this( cor, textura, false );
     }
     
-    @NonNull
-    public static String gerarCodigoVertexShader( boolean cor, boolean textura ) {
+    public Programa( boolean cor ) {
+        this( cor, false, false );
+    }
+    
+    public Programa() {
+        this( false, false, false );
+    }
+    
+    private static String gerarCodigoVertexShader( boolean cor, boolean textura ) {
         StringBuilder codigo = new StringBuilder(
                 "#version 320 es\n"
             +   "\n"
@@ -69,9 +59,9 @@ public class Programa {
         codigo
             .append( "\n" )
             .append(
-                "void main() {\n"
-            +   "    gl_Position = trans * rotZ * rotY * rotX * escala * pos;\n"
-            +   "\n"
+                    "void main() {\n"
+                +   "    gl_Position = trans * rotZ * rotY * rotX * escala * pos;\n"
+                +   "\n"
             );
         
         if ( cor )
@@ -88,11 +78,10 @@ public class Programa {
     public static final int MAXIMO_PARAMETROS_TEXTURA = 2;
     public static final int MAXIMO_SAIDAS = 8;
     
-    @NonNull
-    public static String gerarCodigoFragmentShader(
+    private static String gerarCodigoFragmentShader(
         boolean cor, boolean textura, boolean texturaMonocromatica
     ) {
-        StringBuilder codigo = new StringBuilder( 
+        StringBuilder codigo = new StringBuilder(
                 "#version 320 es\n"
             +   "\n"
             +   "precision mediump float;\n"
@@ -102,7 +91,7 @@ public class Programa {
         if ( cor )
             codigo.append( "in vec4 corFrag;\n" );
         
-        if ( textura ) { 
+        if ( textura ) {
             codigo.append(
                     "in vec2 texFrag;\n"
                 +   "\n"
@@ -162,7 +151,7 @@ public class Programa {
             +   "vec2 dist = vec2( 1.0 / float( tamanho.x ), 1.0 / float( tamanho.y ) );\n"
             +   "\n"
             +   "vec4 corTex;\n"
-            +   "\n"            
+            +   "\n"
             +   "vec4 sobelDx = vec4( 0.0 );\n"
             +   "vec4 sobelDy = vec4( 0.0 );\n"
             +   "\n"
@@ -192,10 +181,10 @@ public class Programa {
             +   "\n"
             +   "sobelDx = abs( sobelDx ) / 4.0;\n"
             +   "sobelDy = abs( sobelDy ) / 4.0;\n"
-            +   "\n" 
+            +   "\n"
             +   "vec4 sobel = sqrt( sobelDx * sobelDx + sobelDy * sobelDy );\n"
             +   "vec4 anguloSobel = vec4( 0.0 );\n"
-            +   "\n" 
+            +   "\n"
             +   "if ( sobelDx.r >= sobelDy.r && sobelDx.r != 0.0 )\n"
             +   "   anguloSobel = vec4( sobelDy.r / sobelDx.r );\n"
             +   "else if ( sobelDy.r != 0.0 )\n"
@@ -214,10 +203,50 @@ public class Programa {
         return codigo.toString();
     }
     
-    public static int gerarPrograma( boolean cor, boolean textura, boolean texturaMonocromatica ) {
-        return gerarPrograma(
-                gerarCodigoVertexShader( cor, textura ),
-                gerarCodigoFragmentShader( cor, textura, texturaMonocromatica )
-        );
+    private static int compilarShader( int tipo, String codigoShader ) {
+        int shader = GLES32.glCreateShader( tipo );
+        
+        GLES32.glShaderSource( shader, codigoShader );
+        GLES32.glCompileShader( shader );
+        int[] compilado = new int[1];
+        GLES32.glGetShaderiv( shader, GLES32.GL_COMPILE_STATUS, compilado, 0 );
+        
+        // Verifica se houve erro de compilação
+        if ( compilado[0] == 0 ) {
+            System.out.println( "Um programa não pôde ser compilado:\n" + "Código fonte:" );
+            
+            int i = 1;
+            for( String linha: codigoShader.split( "\n" ) ) {
+                System.out.println( i + "\t" + linha );
+                i++;
+            }
+        }
+        
+        return shader;
+    }
+    
+    public int getId() {
+        return id;
+    }
+    
+    public int getAttribLocation( String nomeAtributo ) {
+        return GLES32.glGetAttribLocation( id, nomeAtributo );
+    }
+    
+    public int getUniformLocation( String nomeUniforme ) {
+        return GLES32.glGetUniformLocation( id, nomeUniforme );
+    }
+    
+    public void ativar() {
+        GLES32.glUseProgram( id );
+    }
+    
+    public void desativar() {
+        GLES32.glUseProgram( 0 );
+    }
+    
+    @Override
+    public void close(){
+        GLES32.glDeleteProgram( id );
     }
 }
