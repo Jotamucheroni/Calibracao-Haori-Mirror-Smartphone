@@ -8,93 +8,47 @@ import com.unesp.calibracao_haori.opengl.Textura;
 import com.unesp.calibracao_haori.opengl.framebuffer.FrameBufferObject;
 
 public class Dispositivo implements AutoCloseable {
-    private String id;
+    private static int instancia = 0;
     
-    private Camera camera;
-    private Textura textura;
-    private FrameBufferObject frameBufferObject;
-    private Desenho desenho;
+    private final String id;
+    private final Camera camera;
+    private final Textura textura;
+    private final FrameBufferObject frameBufferObject;
+    private final Desenho desenho;
+    private final DetectorPontos detectorPontos;
     
-    private DetectorPontos detectorPontos;
-    
-    public Dispositivo(
-        String id,
-        Camera camera, Textura textura, FrameBufferObject frameBufferObject, Desenho desenho,
-        DetectorPontos detectorPontos
-    ) {
-        setId( id );
-        setCamera( camera );
-        setTextura( textura );
-        setFrameBufferObject( frameBufferObject );
-        setDesenho( desenho );
-        setDetectorPontos( detectorPontos );
-    }
-    
-    public Dispositivo(
-        Camera camera, Textura textura, FrameBufferObject frameBufferObject, Desenho desenho,
-        DetectorPontos detectorPontos
-    ) {
-        this( null, camera, textura, frameBufferObject, desenho, detectorPontos);
-    }
-    
-    public Dispositivo(
-        String id,
-        Camera camera, Textura textura, FrameBufferObject frameBufferObject, Desenho desenho
-    ) {
-        this( id, camera, textura, frameBufferObject, desenho, null );
+    public Dispositivo( String id, Camera camera ) {
+        if ( id == null )
+            id = "Dispositivo " + instancia;
+        this.id = id;
+        instancia++;
         
-        setDetectorPontos();
-    }
-    
-    public Dispositivo(
-        Camera camera, Textura textura, FrameBufferObject frameBufferObject, Desenho desenho
-    ) {
-        this( null, camera, textura, frameBufferObject, desenho);
-    }
-    
-    public Dispositivo(
-        String id,
-        Camera camera, Textura textura, FrameBufferObject frameBufferObject
-    ) {
-        this( id, camera, textura, frameBufferObject, null, null );
+        this.camera = camera;
         
-        setDesenho();
-        setDetectorPontos();
-    }
-    
-    public Dispositivo(
-        Camera camera, Textura textura, FrameBufferObject frameBufferObject
-    ) {
-        this( null, camera, textura, frameBufferObject );
-    }
-    
-    public Dispositivo(
-        String id,
-        Camera camera, Textura textura
-    ) {
-        this( id, camera, textura, null, null, null );
+        if ( camera != null )
+            textura = new Textura(
+                camera.getLarguraImagem(), camera.getAlturaImagem(),
+                camera.getNumeroComponentesCorImagem()
+            );
+        else
+            textura = null;
         
-        setFrameBufferObject();
-        setDesenho();
-        setDetectorPontos();
-    }
-    
-    public Dispositivo(
-        Camera camera, Textura textura
-    ) {
-        this( null, camera, textura );
-    }
-    
-    public Dispositivo(
-        String id,
-        Camera camera
-    ) {
-        this( id, camera, null, null, null, null );
+        frameBufferObject = new FrameBufferObject( Programa.MAXIMO_SAIDAS, 640, 480 );
         
-        setTextura();
-        setFrameBufferObject();
-        setDesenho();
-        setDetectorPontos();
+        if ( textura != null )
+            desenho = new Desenho(
+                2, 2,
+                Desenho.getRefQuad(), Desenho.getRefElementos(),
+                textura
+            );
+        else
+            desenho = null;
+        
+        detectorPontos = new DetectorPontos(
+            frameBufferObject.getLargura(),
+            frameBufferObject.getAltura(),
+            4
+        );
     }
     
     public Dispositivo(
@@ -103,80 +57,6 @@ public class Dispositivo implements AutoCloseable {
         this( null, camera );
     }
     
-    public void setId( String id ) {
-        if ( id == null ) {
-            this.id = "Dispositivo";
-            
-            return;
-        }
-        
-        this.id = id;
-    }
-    
-    public void setCamera( Camera camera ) {
-        this.camera = camera;
-    }
-    
-    public void setTextura( Textura textura ) {
-        this.textura = textura;
-    }
-    
-    private void setTextura() {
-        if ( camera == null )
-            return;
-        
-        Textura inicializadorTextura = new Textura(
-            camera.getLarguraImagem(), camera.getAlturaImagem(), true
-        );
-        
-        if ( camera.getNumeroComponentesCorImagem() > 1 )
-            inicializadorTextura.setMonocromatica( false );
-        
-        setTextura( inicializadorTextura );
-    }
-    
-    public void setFrameBufferObject( FrameBufferObject frameBufferObject ) {
-        this.frameBufferObject = frameBufferObject;
-    }
-    
-    private void setFrameBufferObject() {
-        setFrameBufferObject(
-            new FrameBufferObject( Programa.MAXIMO_SAIDAS, 640, 480 )
-        );
-    }
-    
-    public void setDesenho( Desenho desenho ) {
-        this.desenho = desenho;
-    }
-    
-    private void setDesenho() {
-        if ( textura == null )
-            return;
-        
-        setDesenho(
-            new Desenho(
-                2, 2,
-                Desenho.getRefQuad(), Desenho.getRefElementos(),
-                textura
-            )
-        );
-    }
-    
-    public void setDetectorPontos( DetectorPontos detectorPontos ) {
-        this.detectorPontos = detectorPontos;
-    }
-    
-    private void setDetectorPontos() {
-        if ( frameBufferObject == null )
-            return;
-        
-        DetectorPontos inicializadorDetectorPontos = new DetectorPontos(
-            frameBufferObject.getNumBytes(), FrameBufferObject.numeroComponentesCor
-        );
-        
-        setDetectorPontos(inicializadorDetectorPontos);
-    }
-
     public String getId() {
         return id;
     }
@@ -201,13 +81,6 @@ public class Dispositivo implements AutoCloseable {
         return detectorPontos;
     }
     
-    public boolean getLigado() {
-        if( camera == null )
-            return false;
-        
-        return camera.getLigada();
-    }
-    
     public void ligar() {
         if ( camera == null )
             return;
@@ -222,15 +95,11 @@ public class Dispositivo implements AutoCloseable {
         camera.desligar();
     }
     
-    public void alocar() {
-        if ( textura != null )
-            textura.alocar();
+    public boolean getLigado() {
+        if ( camera == null )
+            return false;
         
-        if ( frameBufferObject != null )
-            frameBufferObject.alocar();
-        
-        if ( detectorPontos != null )
-            detectorPontos.alocar();
+        return camera.getLigada();
     }
     
     public void atualizarTextura() {
@@ -241,21 +110,26 @@ public class Dispositivo implements AutoCloseable {
     }
     
     public void draw() {
-        if ( frameBufferObject == null || desenho == null )
+        if ( frameBufferObject == null )
             return;
         
         frameBufferObject.clear();
-        frameBufferObject.draw(desenho);
+        
+        if ( desenho == null )
+            return;
+        
+        frameBufferObject.draw( desenho );
     }
     
     public void atualizarImagemDetector( int numeroRenderBuffer ) {
-        if ( detectorPontos == null || frameBufferObject == null )
+        if ( detectorPontos == null )
             return;
         
-        if ( detectorPontos.pronto() ) {
-            frameBufferObject.lerRenderBuffer( numeroRenderBuffer, detectorPontos.getImagem() );
-            detectorPontos.executar();
-        }
+        if ( detectorPontos.ocupado() || frameBufferObject == null )
+            return;
+        
+        frameBufferObject.lerRenderBuffer( numeroRenderBuffer, detectorPontos.getImagem() );
+        detectorPontos.executar();
     }
     
     public void atualizarImagemDetector() {
@@ -266,6 +140,9 @@ public class Dispositivo implements AutoCloseable {
     public void close() {
         if ( detectorPontos != null )
             detectorPontos.close();
+        
+        if ( desenho != null )
+            desenho.close();
         
         if ( frameBufferObject != null )
             frameBufferObject.close();

@@ -40,7 +40,6 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
                 atividade, CameraSelector.DEFAULT_BACK_CAMERA, 320, 240, 1
             )
         );
-        cameraTraseira.alocar();
         cameraTraseira.ligar();
         
         Desenho desenho = cameraTraseira.getDesenho();
@@ -64,12 +63,14 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
     public void onDrawFrame( GL10 unused ) {
         cameraTraseira.atualizarTextura();
         cameraTraseira.draw();
-//        cameraTraseira.atualizarImagemDetector( 3 );
+        cameraTraseira.atualizarImagemDetector( 3 );
         
         tela.clear();
         cameraTraseira.getFrameBufferObject().copiar(
             tela, tela.getLargura(), tela.getAltura(), 3, 1
         );
+        
+        System.out.println( cameraTraseira.getDetectorPontos().getSaida() );
     }
     
     @Override
