@@ -43,6 +43,11 @@ public class Programa implements AutoCloseable {
             +   "uniform mat4 rotY;\n"
             +   "uniform mat4 rotZ;\n"
             +   "uniform mat4 trans;\n"
+            +   "uniform mat4 projecao;\n"
+            +   "uniform mat4 translacaoTela;\n"
+            +   "uniform mat4 rotacaoTelaX;\n"
+            +   "uniform mat4 rotacaoTelaY;\n"
+            +   "uniform mat4 rotacaoTelaZ;\n"
             +   "\n"
             +   "in vec4 pos;\n"
             +   "in vec4 cor;\n"
@@ -60,7 +65,10 @@ public class Programa implements AutoCloseable {
             .append( "\n" )
             .append(
                     "void main() {\n"
-                +   "    gl_Position = trans * rotZ * rotY * rotX * escala * pos;\n"
+                +   "    gl_Position = translacaoTela * projecao * trans * rotZ * rotY * rotX * escala * pos;\n"
+                +   "    gl_Position.x -= 1.0;\n"
+                +   "    gl_Position = rotacaoTelaZ * rotacaoTelaY * rotacaoTelaX * gl_Position;\n"
+                +   "    gl_Position.x += 1.0;\n"
                 +   "\n"
             );
         

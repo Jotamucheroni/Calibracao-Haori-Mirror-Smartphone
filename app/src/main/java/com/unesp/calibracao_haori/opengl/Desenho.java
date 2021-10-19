@@ -49,7 +49,10 @@ public class Desenho implements AutoCloseable {
     private final int
         ponteiroMatrizEscala,
         ponteiroMatrizRotX, ponteiroMatrizRotY, ponteiroMatrizRotZ,
-        ponteiroMatrizTrans;
+        ponteiroMatrizTrans,
+        ponteiroMatrizProjecao,
+        ponteiroMatrizTranslacaoTela,
+        ponteiroMatrizRotacaoTelaX, ponteiroMatrizRotacaoTelaY, ponteiroMatrizRotacaoTelaZ;
     
     private final Textura textura;
     private final int ponteiroParametroTextura;
@@ -144,6 +147,11 @@ public class Desenho implements AutoCloseable {
         ponteiroMatrizRotY = programa.getUniformLocation( "rotY" );
         ponteiroMatrizRotZ = programa.getUniformLocation( "rotZ" );
         ponteiroMatrizTrans = programa.getUniformLocation( "trans" );
+        ponteiroMatrizProjecao = programa.getUniformLocation( "projecao" );
+        ponteiroMatrizTranslacaoTela = programa.getUniformLocation( "translacaoTela" );
+        ponteiroMatrizRotacaoTelaX = programa.getUniformLocation( "rotacaoTelaX" );
+        ponteiroMatrizRotacaoTelaY = programa.getUniformLocation( "rotacaoTelaY" );
+        ponteiroMatrizRotacaoTelaZ = programa.getUniformLocation( "rotacaoTelaZ" );
         
         this.textura = textura;
         ponteiroParametroTextura = programa.getUniformLocation( "parametroTextura" );
@@ -378,7 +386,10 @@ public class Desenho implements AutoCloseable {
     private final float[]
         vetorEscala = new float[NUMERO_COORDENDAS],
         vetorRotacao = new float[NUMERO_COORDENDAS],
-        vetorTranslacao = new float[NUMERO_COORDENDAS];
+        vetorTranslacao = new float[NUMERO_COORDENDAS],
+        vetorProjecao = new float[2],
+        vetorTranslacaoTela = new float[2],
+        vetorRotacaoTela = new float[NUMERO_COORDENDAS];
     
     private static final float[] matrizId = {
         1.0f, 0.0f, 0.0f, 0.0f,
@@ -392,7 +403,12 @@ public class Desenho implements AutoCloseable {
         matrizRotX = matrizId.clone(),
         matrizRotY = matrizId.clone(),
         matrizRotZ = matrizId.clone(),
-        matrizTrans = matrizId.clone();
+        matrizTrans = matrizId.clone(),
+        matrizProjecao = matrizId.clone(),
+        matrizTranslacaoTela = matrizId.clone(),
+        matrizRotacaoTelaX = matrizId.clone(),
+        matrizRotacaoTelaY = matrizId.clone(),
+        matrizRotacaoTelaZ = matrizId.clone();
     
     public void setEscala( float x, float y, float z ) {
         vetorEscala[0] = x;
@@ -466,6 +482,74 @@ public class Desenho implements AutoCloseable {
         setTranslacao( xyz[0], xyz[1], xyz[2] );
     }
     
+    public void setProjecao( float x, float y ) {
+        vetorProjecao[0] = x;
+        vetorProjecao[1] = y;
+        
+        matrizProjecao[0] = x;    //                  0                    0           0
+        /*                  0*/   matrizProjecao[5] = y;    //             0           0
+        /*                  0                         0*/   //             1           0
+        //                  0                         0                    0           1
+    }
+    
+    public void setProjecao( float[] xy ) {
+        if ( xy == null || xy.length < 2 )
+            return;
+        
+        setProjecao( xy[0], xy[1] );
+    }
+    
+    public void setTranslacaoTela( float x, float y ) {
+        vetorTranslacaoTela[0] = x;
+        vetorTranslacaoTela[1] = y;
+        
+        /*       1       0       0*/       matrizTranslacaoTela[3] =  x;
+        /*       0       1       0*/       matrizTranslacaoTela[7] =  y;
+        //       0       0       1                                    0
+        //       0       0       0                                    1
+    }
+    
+    public void setTranslacaoTela( float[] xy ) {
+        if ( xy == null || xy.length < 2 )
+            return;
+        
+        setTranslacaoTela( xy[0], xy[1] );
+    }
+    
+    public void setRotacaoTela( float x, float y, float z ) {
+        vetorRotacaoTela[0] = x;
+        vetorRotacaoTela[1] = y;
+        vetorRotacaoTela[2] = z;
+        
+        float
+            sinX = (float) Math.sin( x ), cosX = (float) Math.cos( x ),
+            sinY = (float) Math.sin( y ), cosY = (float) Math.cos( y ),
+            sinZ = (float) Math.sin( z ), cosZ = (float) Math.cos( z );
+        
+        // 1                                0                                  0        0
+        /* 0*/  matrizRotacaoTelaX[5] =  cosX;    matrizRotacaoTelaX[6] =  -sinX;    // 0
+        /* 0*/  matrizRotacaoTelaX[9] =  sinX;    matrizRotacaoTelaX[10] =  cosX;    // 0
+        // 0                                0                                  0        1
+
+        matrizRotacaoTelaY[0] =  cosY;    /* 0*/  matrizRotacaoTelaY[2] =   sinY;    // 0
+        //                          0        1                                 0        0
+        matrizRotacaoTelaY[8] = -sinY;    /* 0*/  matrizRotacaoTelaY[10] =  cosY;    // 0
+        //                          0        0                                 0        1
+
+        matrizRotacaoTelaZ[0] =  cosZ;    matrizRotacaoTelaZ[1] = -sinZ;    // 0    0
+        matrizRotacaoTelaZ[4] =  sinZ;    matrizRotacaoTelaZ[5] =  cosZ;    // 0    0
+        //                          0                                 0        1    0
+        //                          0                                 0        0    1
+    }
+    
+    public void setRotacaoTela( float[] xyz ) {
+        if ( xyz == null )
+            return;
+        
+        xyz = getXYZ( xyz );
+        setRotacaoTela( xyz[0], xyz[1], xyz[2] );
+    }
+    
     public float getEscala( int coord ) {
         return vetorEscala[getCoordenadaValida( coord )];
     }
@@ -478,6 +562,28 @@ public class Desenho implements AutoCloseable {
         return vetorTranslacao[getCoordenadaValida( coord )];
     }
     
+    public float getProjecao( int coord ) {
+        if ( coord < 0 )
+            coord = 0;
+        else if ( coord > 1 )
+            coord = 1;
+        
+        return vetorProjecao[coord];
+    }
+    
+    public float getTranslacaoTela( int coord ) {
+        if ( coord < 0 )
+            coord = 0;
+        else if ( coord > 1 )
+            coord = 1;
+        
+        return vetorTranslacaoTela[coord];
+    }
+    
+    public float getRotacaoTela( int coord ) {
+        return vetorRotacaoTela[getCoordenadaValida( coord )];
+    }
+    
     public float[] getVetorEscala() {
         return vetorEscala.clone();
     }
@@ -488,6 +594,18 @@ public class Desenho implements AutoCloseable {
     
     public float[] getVetorTranslacao() {
         return vetorTranslacao.clone();
+    }
+
+    public float[] getVetorProjecao() {
+        return vetorProjecao.clone();
+    }
+    
+    public float[] getVetorTranslacaoTela() {
+        return vetorTranslacaoTela.clone();
+    }
+    
+    public float[] getVetorRotacaoTela() {
+        return vetorRotacaoTela.clone();
     }
     
     public float[] getMatrizEscala() {
@@ -508,6 +626,26 @@ public class Desenho implements AutoCloseable {
     
     public float[] getMatrizTranslacao() {
         return matrizTrans.clone();
+    }
+
+    public float[] getMatrizProjecao() {
+        return matrizProjecao.clone();
+    }
+    
+    public float[] getMatrizTranslacaoTela() {
+        return matrizTranslacaoTela.clone();
+    }
+
+    public float[] getMatrizRotacaoTelaX() {
+        return matrizRotacaoTelaX.clone();
+    }
+
+    public float[] getMatrizRotacaoTelaY() {
+        return matrizRotacaoTelaY.clone();
+    }
+
+    public float[] getMatrizRotacaoTelaZ() {
+        return matrizRotacaoTelaZ.clone();
     }
     
     private final float[] parametroTextura = new float[Programa.MAXIMO_PARAMETROS_TEXTURA];
@@ -553,6 +691,21 @@ public class Desenho implements AutoCloseable {
         );
         GLES32.glUniformMatrix4fv(
             ponteiroMatrizTrans, 1, true, matrizTrans, 0
+        );
+        GLES32.glUniformMatrix4fv(
+            ponteiroMatrizProjecao, 1, true, matrizProjecao, 0
+        );
+        GLES32.glUniformMatrix4fv(
+            ponteiroMatrizTranslacaoTela, 1, true, matrizTranslacaoTela, 0
+        );
+        GLES32.glUniformMatrix4fv(
+            ponteiroMatrizRotacaoTelaX, 1, true, matrizRotacaoTelaX, 0
+        );
+        GLES32.glUniformMatrix4fv(
+            ponteiroMatrizRotacaoTelaY, 1, true, matrizRotacaoTelaY, 0
+        );
+        GLES32.glUniformMatrix4fv(
+            ponteiroMatrizRotacaoTelaZ, 1, true, matrizRotacaoTelaZ, 0
         );
         
         GLES32.glUniform1fv(
