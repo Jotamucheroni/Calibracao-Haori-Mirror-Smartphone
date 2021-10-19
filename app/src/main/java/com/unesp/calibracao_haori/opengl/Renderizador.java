@@ -25,6 +25,7 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
     }
     
     private Dispositivo cameraTraseira;
+    private Desenho quadradoCalibracao, quadradoTeste;
     private Bluetooth bluetooth;
     
     private final int NUMERO_PARAMETROS_TEXTURA = 2;
@@ -46,6 +47,27 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
         for ( int i = 0; i < NUMERO_PARAMETROS_TEXTURA; i++ )
             desenho.setParametroTextura( i, 0.1f );
         
+        quadradoCalibracao = new Desenho(
+            2,
+            new float[] {
+                -1.0f,  1.0f,
+                -1.0f, -1.0f,
+                 1.0f, -1.0f,
+                 1.0f,  1.0f,
+            },
+            Desenho.getRefElementos()
+        );
+        quadradoTeste = new Desenho(
+            2,
+            new float[] {
+                -1.0f,  1.0f,
+                -1.0f, -1.0f,
+                 1.0f, -1.0f,
+                 1.0f,  1.0f,
+            },
+            Desenho.getRefElementos()
+        );
+        
         atividade.requisitarPermissao( Manifest.permission.BLUETOOTH );
         bluetooth = new Bluetooth( atividade, cameraTraseira.getCamera().getImagem() );
         bluetooth.abrirServidor();
@@ -66,11 +88,41 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
         cameraTraseira.atualizarImagemDetector( 3 );
         
         tela.clear();
-        cameraTraseira.getFrameBufferObject().copiar(
-            tela, tela.getLargura(), tela.getAltura(), 3, 1
-        );
         
-        System.out.println( cameraTraseira.getDetectorPontos().getSaida() );
+        if ( bluetooth.exibirQuadradoCalibracao() ) {
+            float[] parametro = bluetooth.getParametrosQuadradoCalibracao();
+            float
+                escalaX = parametro[2],
+                escalaY = parametro[3];
+            
+            quadradoCalibracao.setEscala( escalaX, escalaY, 1 );
+            quadradoCalibracao.setRotacao(
+                (float) Math.toRadians( parametro[4] - 90 ),
+                (float) Math.toRadians( parametro[5] - 90 ),
+                (float) Math.toRadians( parametro[6] - 90 )
+            );
+            quadradoCalibracao.setTranslacao(
+                escalaX + ( parametro[0] - 1 ),
+                -escalaY + ( parametro[1] - 1 ),
+                0
+            );
+            
+            tela.draw( tela.getLargura() / 2, tela.getAltura(), quadradoCalibracao );
+        }
+        
+        if ( bluetooth.exibirQuadradoTeste() ) {
+            float[] parametro = bluetooth.getParametrosQuadradoTeste();
+            
+            quadradoTeste.setProjecao( parametro[0], parametro[1] );
+            quadradoTeste.setTranslacaoTela( parametro[2] - 1, parametro[3] - 1 );
+            quadradoTeste.setRotacaoTela(
+                (float) Math.toRadians( parametro[4] - 90 ),
+                (float) Math.toRadians( parametro[5] - 90 ),
+                (float) Math.toRadians( parametro[6] - 90 )
+            );
+            
+            tela.draw( tela.getLargura() / 2, tela.getAltura(), quadradoTeste );
+        }
     }
     
     @Override

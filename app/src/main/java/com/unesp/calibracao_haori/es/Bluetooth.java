@@ -1,5 +1,6 @@
 package com.unesp.calibracao_haori.es;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
@@ -15,7 +16,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.util.Log;
 
 import com.unesp.calibracao_haori.MainActivity;
 
@@ -149,6 +149,107 @@ public class Bluetooth implements AutoCloseable {
             }
         ).start();
     }
+
+    private float[] dados;
+    private boolean exibirQuadradoCalibracao = false;
+    private boolean exibirQuadradoTeste = false;
+    private final float[]
+        dadosQuadradoCalibracao = new float[]{
+            0.90f, 0.82f, 0.24f, 0.25f, 90.00f, 90.00f, 89.00f
+        },
+        dadosQuadradoTeste = new float[]{
+            1.0f, 1.0f, 0.0f + 1.0f, 0.0f + 1.0f, 90f, 90f, 90f
+        };
+    private float sinal = 0;
+    
+    private void receberDados() {
+        DataInputStream entrada;
+        
+        synchronized ( travaSoquete ) {
+            if ( soquete == null )
+                return;
+            
+            try {
+                entrada = new DataInputStream( soquete.getInputStream() );
+            } catch ( IOException e ) {
+                e.printStackTrace();
+                
+                return;
+            }
+        }
+        
+        new Thread(
+            () ->
+            {
+                try {
+                    float dado;
+                    
+                    while( true ) {
+                        do {
+                            sinal = entrada.readFloat();
+                        } while( sinal >= 0 );
+                        
+                        switch ( (int) sinal ) {
+                            case -1:
+                                dados = dadosQuadradoCalibracao;
+                                exibirQuadradoCalibracao = true;
+                                
+                                break;
+                            
+                            case -3:
+                                dados = dadosQuadradoTeste;
+                                exibirQuadradoTeste = true;
+                                
+                                break;
+                            
+                            default:
+                                continue;
+                        }
+                        
+                        for ( int i = 0; ; i++ ) {
+                            dado = entrada.readFloat();
+                            
+                            if ( dado < 0 )
+                                break;
+                            
+                            if ( i == dados.length )
+                                i = 0;
+                            
+                            dados[i] = dado;
+                        }
+                        
+                        switch ( (int) dado ) {
+                            case -2:
+                                exibirQuadradoCalibracao = false;
+                                
+                                break;
+                            
+                            case -4:
+                                exibirQuadradoTeste = false;
+                                
+                                break;
+                        }
+                    }
+                } catch ( IOException ignored ) {}
+            }
+        ).start();
+    }
+    
+    public boolean exibirQuadradoCalibracao() {
+        return exibirQuadradoCalibracao;
+    }
+    
+    public float[] getParametrosQuadradoCalibracao() {
+        return dadosQuadradoCalibracao.clone();
+    }
+    
+    public boolean exibirQuadradoTeste() {
+        return exibirQuadradoTeste;
+    }
+    
+    public float[] getParametrosQuadradoTeste() {
+        return dadosQuadradoTeste.clone();
+    }
     
     private Thread servidor;
     private BluetoothServerSocket soqueteServidor;
@@ -191,6 +292,7 @@ public class Bluetooth implements AutoCloseable {
                         this.soquete = soquete;
                     }
                     enviarDados();
+                    receberDados();
                 } catch( IOException ignored ) {}
             }
         );
