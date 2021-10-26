@@ -155,10 +155,14 @@ public class Bluetooth implements AutoCloseable {
     private boolean exibirQuadradoTeste = false;
     private final float[]
         dadosQuadradoCalibracao = new float[]{
-            0.90f, 0.82f, 0.24f, 0.25f, 90.00f, 90.00f, 89.00f
+            0.98f, 1.26f, 0.25f, 0.25f, 90.00f, 90.00f, 88.00f
         },
         dadosQuadradoTeste = new float[]{
-            1.0f, 1.0f, 0.0f + 1.0f, 0.0f + 1.0f, 90f, 90f, 90f
+            1.0f + 1000, 1.0f + 1000,
+            0.0f + 1000, 0.0f + 1000,
+            0.0f + 90 + 1000, 0.0f + 90 + 1000, 0.0f + 90 + 1000,
+            1.0f + 1000, 1.0f + 10000,
+            0.0f + 1000, 0.0f + 1000, 1.0f + 1000
         };
     private float sinal = 0;
     

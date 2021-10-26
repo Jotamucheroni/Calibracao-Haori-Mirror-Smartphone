@@ -65,10 +65,21 @@ public class Programa implements AutoCloseable {
             .append( "\n" )
             .append(
                     "void main() {\n"
-                +   "    gl_Position = translacaoTela * projecao * trans * rotZ * rotY * rotX * escala * pos;\n"
-                +   "    gl_Position.x -= 1.0;\n"
-                +   "    gl_Position = rotacaoTelaZ * rotacaoTelaY * rotacaoTelaX * gl_Position;\n"
-                +   "    gl_Position.x += 1.0;\n"
+                +   "    gl_Position = trans * rotZ * rotY * rotX * escala * pos;\n"
+                +   "    if ( gl_Position.z > 0.0 ) {\n"
+                +   "       float z = gl_Position.z, tx, ty;\n"
+                            
+                +   "       gl_Position = projecao * gl_Position;\n"
+                +   "       gl_Position.x /= gl_Position.z;\n"
+                +   "       gl_Position.y /= gl_Position.z;\n"
+                +   "       gl_Position.z = 0.0;\n"
+                +   "       gl_Position = rotacaoTelaZ * rotacaoTelaY * rotacaoTelaX * gl_Position;\n"
+                +   "       tx = translacaoTela[3][0] / ( z * z );\n"
+                +   "       ty = translacaoTela[3][1] / ( z * z );\n"
+                +   "       gl_Position.x += tx;\n"
+                +   "       gl_Position.y += ty;\n"
+                +   "    }\n"
+                +   "    gl_Position.z = 1.0;\n"
                 +   "\n"
             );
         
