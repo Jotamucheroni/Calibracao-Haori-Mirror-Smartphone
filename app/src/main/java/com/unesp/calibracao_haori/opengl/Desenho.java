@@ -388,7 +388,7 @@ public class Desenho implements AutoCloseable {
         vetorRotacao = new float[NUMERO_COORDENDAS],
         vetorTranslacao = new float[NUMERO_COORDENDAS],
         vetorProjecao = new float[2],
-        vetorTranslacaoTela = new float[2],
+        vetorTranslacaoTela = new float[4],
         vetorRotacaoTela = new float[NUMERO_COORDENDAS];
     
     private static final float[] matrizId = {
@@ -499,21 +499,23 @@ public class Desenho implements AutoCloseable {
         setProjecao( xy[0], xy[1] );
     }
     
-    public void setTranslacaoTela( float x, float y ) {
+    public void setTranslacaoTela( float x, float y, float expoenteZx, float expoenteZy ) {
         vetorTranslacaoTela[0] = x;
         vetorTranslacaoTela[1] = y;
+        vetorTranslacaoTela[2] = expoenteZx;
+        vetorTranslacaoTela[3] = expoenteZy;
         
-        /*       1       0       0*/       matrizTranslacaoTela[3] =  x;
-        /*       0       1       0*/       matrizTranslacaoTela[7] =  y;
-        //       0       0       1                                    0
-        //       0       0       0                                    1
+        /*        1        0*/  matrizTranslacaoTela[2] = expoenteZx;  matrizTranslacaoTela[3] =  x;
+        /*        0        1*/  matrizTranslacaoTela[6] = expoenteZy;  matrizTranslacaoTela[7] =  y;
+        //        0        0                                       1                              0
+        //        0        0                                       0                              1
     }
     
-    public void setTranslacaoTela( float[] xy ) {
-        if ( xy == null || xy.length < 2 )
+    public void setTranslacaoTela( float[] xyZxZy ) {
+        if ( xyZxZy == null || xyZxZy.length < 4 )
             return;
         
-        setTranslacaoTela( xy[0], xy[1] );
+        setTranslacaoTela( xyZxZy[0], xyZxZy[1], xyZxZy[2], xyZxZy[3] );
     }
     
     public void setRotacaoTela( float x, float y, float z ) {
@@ -574,8 +576,8 @@ public class Desenho implements AutoCloseable {
     public float getTranslacaoTela( int coord ) {
         if ( coord < 0 )
             coord = 0;
-        else if ( coord > 1 )
-            coord = 1;
+        else if ( coord > 3 )
+            coord = 3;
         
         return vetorTranslacaoTela[coord];
     }

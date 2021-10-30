@@ -114,7 +114,10 @@ public class Renderizador implements GLSurfaceView.Renderer, AutoCloseable {
             );
             
             quadradoTeste.setProjecao( parametro[0] - 1000, parametro[1] - 1000 );
-            quadradoTeste.setTranslacaoTela( parametro[2] - 1000, parametro[3] - 1000 );
+            quadradoTeste.setTranslacaoTela(
+                parametro[2] - 1000, parametro[3] - 1000, 
+                parametro[12] - 1000, parametro[13] - 1000
+            );
             quadradoTeste.setRotacaoTela(
                 (float) Math.toRadians( parametro[4] - 90 - 1000 ),
                 (float) Math.toRadians( parametro[5] - 90 - 1000 ),

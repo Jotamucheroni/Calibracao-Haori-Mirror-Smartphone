@@ -162,7 +162,8 @@ public class Bluetooth implements AutoCloseable {
             0.0f + 1000, 0.0f + 1000,
             0.0f + 90 + 1000, 0.0f + 90 + 1000, 0.0f + 90 + 1000,
             1.0f + 1000, 1.0f + 10000,
-            0.0f + 1000, 0.0f + 1000, 1.0f + 1000
+            0.0f + 1000, 0.0f + 1000, 1.0f + 1000,
+            0.0f + 1000, 0.0f + 1000
         };
     private float sinal = 0;
     
